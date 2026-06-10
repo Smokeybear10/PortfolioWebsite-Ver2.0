@@ -3,1721 +3,649 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Thomas Ou — Software Engineer</title>
+  <title>Thomas Ou • Portfolio</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <base href="/">
+  <!-- Google Fonts for modern look -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Inter+Tight:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-  <style>
-    :root {
-      --bg:        #0a0a0a;
-      --bg-2:      #121212;
-      --bg-3:      #1a1a1a;
-      --line:      #262626;
-      --text:      #f5f5f5;
-      --text-2:    #a8a8a8;
-      --text-3:    #6a6a6a;
-      --accent:    #ff5230;
-      --green:     #62ff7a;
-      --tight:     'Inter Tight', -apple-system, system-ui, sans-serif;
-      --sans:      'Inter', -apple-system, system-ui, sans-serif;
-      --mono:      'JetBrains Mono', ui-monospace, monospace;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--sans);
-      font-size: 16px;
-      line-height: 1.5;
-      -webkit-font-smoothing: antialiased;
-      cursor: none;
-    }
-    body { overflow-x: hidden; }
-    a { color: inherit; text-decoration: none; }
-    button { border: 0; background: 0; font: inherit; color: inherit; cursor: none; }
-    img { max-width: 100%; display: block; }
-    ::selection { background: var(--accent); color: white; }
-
-    /* ─── CUSTOM CURSOR ──────────────────────────────────────────────── */
-    .cursor {
-      position: fixed; top: 0; left: 0;
-      width: 8px; height: 8px;
-      background: var(--text);
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 9999;
-      transition: width 0.22s ease, height 0.22s ease, background 0.22s ease;
-      transform: translate(-50%, -50%);
-      mix-blend-mode: difference;
-    }
-    .cursor.lg { width: 56px; height: 56px; background: var(--accent); }
-
-
-    /* ─── TOP NAV ────────────────────────────────────────────────────── */
-    .nav {
-      position: fixed; top: 0; left: 0; right: 0;
-      z-index: 100;
-      padding: 18px 32px;
-      display: flex; justify-content: space-between; align-items: center;
-      mix-blend-mode: difference;
-    }
-    .nav .logo {
-      font-family: var(--tight);
-      font-weight: 800;
-      font-size: 16px;
-      letter-spacing: -0.01em;
-      color: white;
-      white-space: nowrap;
-    }
-    .nav .logo .dot { color: var(--accent); }
-    .nav .links {
-      display: flex; gap: 28px;
-      font-family: var(--mono);
-      font-size: 12px;
-      letter-spacing: 0.05em;
-      color: white;
-    }
-    .nav .links a {
-      position: relative;
-      padding: 6px 0;
-    }
-    .nav .links a::after {
-      content: '';
-      position: absolute;
-      bottom: 0; left: 0; width: 0; height: 1px;
-      background: white;
-      transition: width 0.3s ease;
-    }
-    .nav .links a:hover::after { width: 100%; }
-    .nav .links a .idx {
-      font-size: 10px;
-      color: var(--accent);
-      margin-right: 6px;
-      letter-spacing: 0.05em;
-      opacity: 0.85;
-    }
-    .nav .cta {
-      font-family: var(--mono);
-      font-size: 11px;
-      letter-spacing: 0.1em;
-      padding: 10px 18px;
-      border: 1px solid white;
-      border-radius: 100px;
-      color: white;
-      transition: all 0.2s ease;
-    }
-    .nav .cta:hover { background: white; color: black; }
-
-    /* ════════════════════════════════════════════════════════════════
-       HERO REBUILD — HUD / BLUEPRINT
-       ════════════════════════════════════════════════════════════════ */
-    .hero {
-      position: relative;
-      height: 100vh;
-      min-height: 720px;
-      overflow: hidden;
-      padding: 0;
-      isolation: isolate;
-    }
-    #heroCanvas {
-      position: absolute; inset: 0;
-      width: 100%; height: 100%;
-      z-index: 1;
-      pointer-events: none;
-    }
-
-    /* corner brackets */
-    .hud-corner {
-      position: absolute;
-      width: 40px; height: 40px;
-      z-index: 5;
-      pointer-events: none;
-    }
-    .hud-corner svg { width: 100%; height: 100%; display: block; overflow: visible; }
-    .hud-corner svg path {
-      stroke: var(--text-3);
-      stroke-width: 1;
-      fill: none;
-      stroke-dasharray: 80;
-      stroke-dashoffset: 80;
-      animation: hudDraw 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
-    }
-    @keyframes hudDraw { to { stroke-dashoffset: 0; } }
-    .hud-corner.tl { top: 20px; left: 20px; }
-    .hud-corner.tr { top: 20px; right: 20px; transform: scaleX(-1); }
-    .hud-corner.br { bottom: 20px; right: 20px; transform: scale(-1, -1); }
-    .hud-corner.bl { bottom: 20px; left: 20px; transform: scaleY(-1); }
-
-    /* HUD readouts */
-    .hud-readout {
-      position: absolute;
-      z-index: 5;
-      font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--text-3);
-      line-height: 1.7;
-      pointer-events: none;
-      opacity: 0;
-      animation: hudFade 0.8s ease 1.0s forwards;
-    }
-    @keyframes hudFade { to { opacity: 1; } }
-    .hud-readout b { color: var(--text-2); font-weight: 500; }
-    .hud-readout em { color: var(--accent); font-style: normal; }
-    .hud-readout .row { display: block; }
-    .hud-readout.tl { top: 80px; left: 32px; }
-    .hud-readout.tr { top: 80px; right: 32px; text-align: right; }
-    .hud-readout.bl { bottom: 32px; left: 32px; }
-    .hud-readout.br { bottom: 32px; right: 32px; text-align: right; font-variant-numeric: tabular-nums; }
-
-    /* annotation markers */
-    .annot {
-      position: absolute;
-      z-index: 4;
-      font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--text-3);
-      pointer-events: none;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      opacity: 0;
-      animation: hudFade 0.6s ease forwards;
-    }
-    .annot .ln { width: 32px; height: 1px; background: var(--accent); }
-    .annot .num { color: var(--accent); font-weight: 500; }
-    .annot .lbl { color: var(--text-2); }
-
-    /* main name */
-    .hero-stack {
-      position: absolute;
-      left: 32px;
-      top: 50%;
-      transform: translateY(-58%);
-      z-index: 3;
-      pointer-events: none;
-    }
-    .hero-stack .nm {
-      display: block;
-      font-family: var(--tight);
-      font-weight: 800;
-      font-size: clamp(80px, 17vw, 280px);
-      line-height: 0.84;
-      letter-spacing: -0.06em;
-      color: var(--text);
-      white-space: nowrap;
-    }
-    .hero-stack .nm .char {
-      display: inline-block;
-      will-change: transform, opacity, filter;
-      pointer-events: auto;
-    }
-    .hero-stack .nm.outline {
-      color: transparent;
-      -webkit-text-stroke: 1.5px var(--text);
-      -webkit-text-fill-color: transparent;
-      font-style: italic;
-      font-weight: 500;
-      transform: translateX(0.45em);
-      margin-top: -0.04em;
-    }
-    .hero-stack .nm .char:hover {
-      color: var(--accent);
-      -webkit-text-fill-color: var(--accent);
-      transform: translateY(-6px) scale(1.04);
-      transition: transform 0.3s var(--ease), color 0.3s ease, -webkit-text-fill-color 0.3s ease;
-    }
-
-    /* cycler row */
-    .hero-cycler-row {
-      position: absolute;
-      left: 32px;
-      bottom: 200px;
-      display: flex;
-      align-items: baseline;
-      gap: 14px;
-      z-index: 4;
-      pointer-events: none;
-    }
-    .hero-cycler-row .br {
-      font-family: var(--mono);
-      font-size: clamp(20px, 2.8vw, 32px);
-      color: var(--accent);
-      font-weight: 400;
-    }
-    .hero-cycler-wrap {
-      position: relative;
-      display: inline-block;
-      font-family: var(--tight);
-      font-weight: 500;
-      font-style: italic;
-      font-size: clamp(28px, 4vw, 56px);
-      letter-spacing: -0.02em;
-      color: var(--text);
-      white-space: nowrap;
-    }
-    .hero-cycler-wrap .layer {
-      display: inline-block;
-    }
-    .hero-cycler-wrap .glitch-r,
-    .hero-cycler-wrap .glitch-g {
-      position: absolute;
-      left: 0; top: 0;
-      pointer-events: none;
-      mix-blend-mode: screen;
-      opacity: 0;
-      transition: opacity 0.18s ease, transform 0.18s ease;
-    }
-    .hero-cycler-wrap .glitch-r { color: #ff5230; }
-    .hero-cycler-wrap .glitch-g { color: #62ff7a; }
-    .hero-cycler-wrap.glitching .glitch-r { opacity: 0.85; transform: translateX(-3px); }
-    .hero-cycler-wrap.glitching .glitch-g { opacity: 0.85; transform: translateX(3px); }
-
-    /* meta row — restyled */
-    .hero-meta {
-      position: absolute;
-      left: 32px;
-      right: 32px;
-      bottom: 64px;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 48px;
-      z-index: 4;
-      border-top: 1px solid var(--line);
-      padding-top: 18px;
-      max-width: 720px;
-    }
-    .hero-meta .col { display: flex; flex-direction: column; gap: 4px; }
-    .hero-meta .col .k {
-      font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--text-3);
-    }
-    .hero-meta .col .k em { color: var(--accent); font-style: normal; }
-    .hero-meta .col .v {
-      font-family: var(--tight);
-      font-size: 15px;
-      color: var(--text);
-      letter-spacing: -0.01em;
-      font-weight: 500;
-    }
-    .hero-meta .col .v b { font-weight: 700; }
-    .hero-meta .col .v .dot { color: var(--green); }
-
-    /* 3D wireframe widget */
-    .hero-widget {
-      position: absolute;
-      right: 64px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 280px;
-      height: 280px;
-      z-index: 3;
-      pointer-events: auto;
-      cursor: grab;
-    }
-    .hero-widget.grabbing { cursor: grabbing; }
-    #widgetCanvas { width: 100%; height: 100%; display: block; }
-    .hero-widget-label {
-      position: absolute;
-      top: -32px; left: 0;
-      font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--text-3);
-      white-space: nowrap;
-      pointer-events: none;
-    }
-    .hero-widget-label b { color: var(--accent); margin-right: 8px; }
-    .hero-widget-label .blink {
-      display: inline-block;
-      width: 6px; height: 6px;
-      background: var(--green);
-      border-radius: 50%;
-      margin-left: 8px;
-      vertical-align: middle;
-      animation: widgetBlink 1.4s ease-in-out infinite;
-    }
-    @keyframes widgetBlink {
-      0%, 100% { opacity: 0.3; }
-      50% { opacity: 1; }
-    }
-
-    /* scroll prompt — restyled */
-    .scroll-prompt-new {
-      position: absolute;
-      bottom: 18px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-family: var(--mono);
-      font-size: 9px;
-      letter-spacing: 0.35em;
-      color: var(--text-3);
-      z-index: 4;
-      pointer-events: none;
-      text-align: center;
-    }
-    .scroll-prompt-new::after {
-      content: '';
-      display: block;
-      width: 1px; height: 22px;
-      background: var(--accent);
-      margin: 6px auto 0;
-      transform-origin: top;
-      animation: scrollLine 1.6s cubic-bezier(0.7, 0, 0.3, 1) infinite;
-    }
-    @keyframes scrollLine {
-      0%   { transform: scaleY(0); transform-origin: top; }
-      40%  { transform: scaleY(1); transform-origin: top; }
-      60%  { transform: scaleY(1); transform-origin: bottom; }
-      100% { transform: scaleY(0); transform-origin: bottom; }
-    }
-
-    /* responsive — kill widget + scale type */
-    @media (max-width: 1100px) {
-      .hero-widget { display: none; }
-      .annot { display: none; }
-      .hero-stack { left: 24px; }
-    }
-    @media (max-width: 900px) {
-      .hud-readout.tl, .hud-readout.tr { display: none; }
-      .hud-readout.bl, .hud-readout.br { font-size: 9px; }
-      .hero-meta { grid-template-columns: repeat(2, 1fr); gap: 16px; bottom: 50px; max-width: none; }
-      .hero-cycler-row { bottom: 220px; left: 24px; }
-      .hero-stack .nm { font-size: clamp(56px, 18vw, 120px); }
-    }
-
-    /* ─── INTRO MARQUEE ──────────────────────────────────────────────── */
-    .marquee-strip {
-      border-top: 1px solid var(--line);
-      border-bottom: 1px solid var(--line);
-      overflow: hidden;
-      padding: 24px 0;
-    }
-    .marquee {
-      display: flex;
-      gap: 48px;
-      animation: scroll-x 38s linear infinite;
-      width: max-content;
-    }
-    .marquee .item {
-      display: flex; align-items: center; gap: 48px;
-      font-family: var(--tight);
-      font-size: 22px;
-      font-weight: 600;
-      letter-spacing: -0.01em;
-      white-space: nowrap;
-    }
-    .marquee .item .star { color: var(--accent); font-size: 12px; }
-    @keyframes scroll-x { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-
-    /* ─── ABOUT ──────────────────────────────────────────────────────── */
-    .about {
-      padding: 160px 32px 120px;
-      max-width: 1280px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: 1fr 2fr;
-      gap: 80px;
-      border-top: none;
-    }
-    .section-eyebrow {
-      font-family: var(--mono);
-      font-size: 11px;
-      letter-spacing: 0.25em;
-      text-transform: uppercase;
-      color: var(--text-3);
-    }
-    .section-eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 14px;
-    }
-    .section-eyebrow::before {
-      content: '';
-      display: inline-block;
-      width: 28px;
-      height: 1px;
-      background: var(--accent);
-    }
-    .about-prose {
-      font-family: var(--tight);
-      font-size: clamp(28px, 3.2vw, 44px);
-      line-height: 1.25;
-      letter-spacing: -0.02em;
-      font-weight: 400;
-      color: var(--text);
-    }
-    .about-prose b { font-weight: 600; color: var(--text); }
-    .about-prose em {
-      font-style: normal;
-      color: var(--accent);
-      font-weight: 500;
-    }
-    .about-prose .strike { color: var(--text-3); text-decoration: line-through; }
-
-    /* ─── ACHIEVEMENT STACK ──────────────────────────────────────────── */
-    .stack {
-      padding: 0 0 120px;
-      overflow: hidden;
-    }
-    .stack-rail {
-      display: flex;
-      gap: 1px;
-      background: var(--line);
-      animation: scroll-x 50s linear infinite;
-      width: max-content;
-    }
-    .stack-card {
-      background: var(--bg);
-      padding: 36px 40px;
-      min-width: 360px;
-      display: flex; flex-direction: column;
-      gap: 16px;
-    }
-    .stack-card .num {
-      font-family: var(--tight);
-      font-size: 88px;
-      font-weight: 800;
-      letter-spacing: -0.04em;
-      line-height: 1;
-    }
-    .stack-card .num small {
-      font-size: 32px;
-      font-weight: 500;
-      color: var(--text-3);
-      vertical-align: top;
-      margin-left: 4px;
-    }
-    .stack-card .lbl {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--text-3);
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-    }
-    .stack-card .desc {
-      font-family: var(--tight);
-      font-size: 15px;
-      color: var(--text-2);
-      line-height: 1.4;
-    }
-    .stack-card.accent .num { color: var(--accent); }
-    .stack-card.green .num { color: var(--green); }
-
-    /* ─── CASES ──────────────────────────────────────────────────────── */
-    .cases {
-      padding: 80px 32px 120px;
-      max-width: 1440px;
-      margin: 0 auto;
-    }
-    .cases-head {
-      display: flex; justify-content: space-between; align-items: end;
-      margin-bottom: 48px;
-      padding-bottom: 24px;
-      border-bottom: 1px solid var(--line);
-    }
-    .cases-head .title {
-      font-family: var(--tight);
-      font-weight: 800;
-      font-size: clamp(40px, 6vw, 88px);
-      letter-spacing: -0.04em;
-      line-height: 0.95;
-    }
-    .cases-head .title em {
-      font-style: italic; font-weight: 400;
-      color: var(--text-3);
-    }
-    .cases-head .meta {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--text-3);
-      letter-spacing: 0.15em;
-      text-align: right;
-    }
-    .cases-head .meta b { color: var(--accent); }
-
-    .cases-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 24px;
-    }
-    .case {
-      position: relative;
-      aspect-ratio: 16 / 11;
-      overflow: hidden;
-      cursor: none;
-      border-radius: 8px;
-    }
-    .case::after {
-      content: '';
-      position: absolute; inset: 0;
-      background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.85) 100%);
-      pointer-events: none;
-      z-index: 2;
-    }
-    .case-bg {
-      position: absolute; inset: 0;
-      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .case:hover .case-bg { transform: scale(1.05); }
-    .case-content {
-      position: absolute; bottom: 0; left: 0; right: 0;
-      padding: 32px;
-      z-index: 3;
-      display: flex; justify-content: space-between; align-items: end;
-    }
-    .case-info { display: flex; flex-direction: column; gap: 6px; }
-    .case-info .name {
-      font-family: var(--tight);
-      font-size: clamp(28px, 3.5vw, 48px);
-      font-weight: 700;
-      letter-spacing: -0.03em;
-      line-height: 1;
-    }
-    .case-info .role {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--text-2);
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-    }
-    .case-tag {
-      font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 0.2em;
-      color: var(--text);
-      padding: 6px 12px;
-      border: 1px solid rgba(255,255,255,0.4);
-      border-radius: 100px;
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-    }
-    .case-tag.live { border-color: var(--green); color: var(--green); }
-    .case-num {
-      position: absolute; top: 24px; left: 24px;
-      z-index: 3;
-      font-family: var(--mono);
-      font-size: 12px;
-      color: rgba(255,255,255,0.7);
-      letter-spacing: 0.15em;
-    }
-    .case .arrow {
-      position: absolute; top: 24px; right: 24px;
-      z-index: 3;
-      font-family: var(--mono);
-      font-size: 16px;
-      color: rgba(255,255,255,0.7);
-      transition: transform 0.3s ease;
-    }
-    .case:hover .arrow { transform: translate(4px, -4px); }
-
-    /* Project visual backgrounds — fake screenshots via gradients */
-    .case-d4nce .case-bg {
-      background:
-        radial-gradient(ellipse at 30% 60%, #ff00aa, transparent 60%),
-        radial-gradient(ellipse at 80% 30%, #00ddff, transparent 60%),
-        linear-gradient(135deg, #1a0033, #0a0a1a);
-    }
-    .case-d4nce .case-bg::before {
-      content: '';
-      position: absolute; inset: 30% 0;
-      background:
-        repeating-linear-gradient(90deg, rgba(255,0,170,0.7) 0 2px, transparent 2px 6px),
-        repeating-linear-gradient(90deg, rgba(0,221,255,0.5) 0 1px, transparent 1px 8px);
-      mask-image: linear-gradient(180deg, transparent, white 30%, white 70%, transparent);
-    }
-    .case-v3rsus .case-bg {
-      background:
-        radial-gradient(circle at 70% 40%, rgba(255, 90, 50, 0.6), transparent 60%),
-        linear-gradient(135deg, #2a0500, #0a0a0a);
-    }
-    .case-v3rsus .case-bg::before {
-      content: '';
-      position: absolute; inset: 30% 24px 40% 24px;
-      background-image: linear-gradient(to top,
-        rgba(255, 80, 50, 0.85) 0,
-        rgba(255, 80, 50, 0.85) 70%,
-        transparent 70%);
-      background-size: 12% 100%;
-      background-repeat: repeat-x;
-      mask-image: linear-gradient(to top, white 0%, white 60%, transparent 100%);
-      filter: blur(0.3px);
-    }
-    .case-r1ver .case-bg {
-      background:
-        radial-gradient(ellipse at 50% 70%, #1a4d2e, #000 70%),
-        linear-gradient(180deg, #0a1a12, #000);
-    }
-    .case-r1ver .case-bg::before {
-      content: '├─ AsKK · 0.72\A│  ├─ raise · 0.68\A│  └─ call  · 0.32\A├─ AdKd · 0.71\A│  ├─ raise · 0.65\A│  └─ fold  · 0.21\A└─ QQ   · 0.61';
-      white-space: pre;
-      position: absolute;
-      top: 30%; left: 32px;
-      font-family: var(--mono);
-      font-size: 13px;
-      color: rgba(98, 255, 122, 0.75);
-      line-height: 1.7;
-    }
-    .case-harboros .case-bg {
-      background: radial-gradient(ellipse at 50% 60%, #001a35, #000 80%);
-    }
-    .case-harboros .case-bg::before {
-      content: '';
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      width: 280px; height: 280px;
-      border: 1px solid rgba(100, 200, 255, 0.4);
-      border-radius: 50%;
-      background:
-        radial-gradient(circle, transparent 60%, rgba(100, 200, 255, 0.06) 70%, transparent 71%),
-        repeating-radial-gradient(circle, transparent 0 28px, rgba(100, 200, 255, 0.18) 28px 29px);
-    }
-    .case-harboros .case-bg::after {
-      content: '';
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      width: 280px; height: 280px;
-      background: conic-gradient(from 30deg, transparent 70%, rgba(98, 255, 122, 0.4));
-      border-radius: 50%;
-    }
-    .case-str1ke .case-bg {
-      background:
-        radial-gradient(ellipse at 30% 40%, rgba(255, 51, 102, 0.4), transparent 60%),
-        linear-gradient(135deg, #1a0008, #050505);
-    }
-    .case-str1ke .case-bg::before {
-      content: '';
-      position: absolute;
-      top: 30%; left: 32px; right: 32px; bottom: 35%;
-      border: 1.5px solid var(--accent);
-      box-shadow: inset 0 0 0 1px rgba(255, 82, 48, 0.3);
-    }
-    .case-str1ke .case-bg::after {
-      content: 'STRIKE · 0.94';
-      position: absolute;
-      top: calc(30% - 22px); left: 32px;
-      background: var(--accent);
-      color: white;
-      font-family: var(--mono);
-      font-size: 10px;
-      padding: 3px 8px;
-      letter-spacing: 0.05em;
-    }
-    .case-dr4ft .case-bg {
-      background: linear-gradient(135deg, #0a1430, #000);
-    }
-    .case-dr4ft .case-bg::before {
-      content: '';
-      position: absolute;
-      top: 25%; left: 40px; right: 40px; bottom: 35%;
-      background: white;
-      transform: rotate(-2deg);
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
-      background-image: repeating-linear-gradient(
-        180deg,
-        transparent 0 16px,
-        rgba(0,0,0,0.85) 16px 19px,
-        transparent 19px 28px,
-        rgba(255, 82, 48, 0.4) 28px 31px,
-        transparent 31px 44px,
-        rgba(0,0,0,0.85) 44px 47px,
-        transparent 47px 60px,
-        rgba(0,0,0,0.85) 60px 63px,
-        transparent 63px 76px
-      );
-    }
-
-    /* ─── EXPERIENCE LIST ────────────────────────────────────────────── */
-    .experience {
-      padding: 60px 32px 120px;
-      max-width: 1280px;
-      margin: 0 auto;
-    }
-    .exp-row {
-      display: grid;
-      grid-template-columns: 100px 1fr 2fr 120px;
-      gap: 32px;
-      padding: 32px 0;
-      border-top: 1px solid var(--line);
-      align-items: center;
-      transition: background 0.2s ease, padding 0.3s ease;
-      cursor: none;
-    }
-    .exp-row:last-child { border-bottom: 1px solid var(--line); }
-    .exp-row:hover {
-      background: linear-gradient(90deg, rgba(255, 82, 48, 0.04), transparent 70%);
-      padding-left: 16px;
-    }
-    .exp-year {
-      font-family: var(--mono);
-      font-size: 13px;
-      color: var(--text-3);
-      letter-spacing: 0.1em;
-    }
-    .exp-org {
-      font-family: var(--tight);
-      font-size: clamp(22px, 2.4vw, 32px);
-      font-weight: 700;
-      letter-spacing: -0.02em;
-    }
-    .exp-role {
-      font-family: var(--sans);
-      font-size: 14px;
-      color: var(--text-2);
-      line-height: 1.5;
-    }
-    .exp-arrow {
-      font-family: var(--mono);
-      font-size: 14px;
-      color: var(--text-3);
-      text-align: right;
-      transition: transform 0.2s ease, color 0.2s ease;
-    }
-    .exp-row:hover .exp-arrow { transform: translateX(6px); color: var(--accent); }
-
-    /* ─── CONTACT ────────────────────────────────────────────────────── */
-    .contact {
-      padding: 120px 32px 80px;
-      max-width: 1280px;
-      margin: 0 auto;
-      text-align: center;
-      border-top: 1px solid var(--line);
-    }
-    .contact .eyebrow {
-      font-family: var(--mono);
-      font-size: 11px;
-      letter-spacing: 0.25em;
-      text-transform: uppercase;
-      color: var(--text-3);
-      margin-bottom: 24px;
-    }
-    .contact .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 14px;
-      justify-content: center;
-    }
-    .contact .eyebrow::before {
-      content: '';
-      display: inline-block;
-      width: 28px;
-      height: 1px;
-      background: var(--accent);
-    }
-    .contact h2 {
-      font-family: var(--tight);
-      font-weight: 800;
-      font-size: clamp(64px, 12vw, 196px);
-      letter-spacing: -0.05em;
-      line-height: 0.9;
-      margin-bottom: 48px;
-    }
-    .contact h2 em {
-      font-style: italic; font-weight: 400;
-      color: var(--accent);
-    }
-    .contact-buttons {
-      display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
-      margin-bottom: 48px;
-    }
-    .contact-btn {
-      padding: 18px 36px;
-      border: 1px solid var(--text);
-      border-radius: 100px;
-      font-family: var(--mono);
-      font-size: 13px;
-      letter-spacing: 0.1em;
-      transition: all 0.2s ease;
-      cursor: none;
-    }
-    .contact-btn:hover {
-      background: var(--text);
-      color: var(--bg);
-    }
-    .contact-btn.primary {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: white;
-    }
-    .contact-btn.primary:hover {
-      background: white;
-      border-color: white;
-      color: black;
-    }
-    .contact-email {
-      font-family: var(--tight);
-      font-size: clamp(20px, 2.4vw, 32px);
-      font-weight: 500;
-      color: var(--text-2);
-      letter-spacing: -0.02em;
-      cursor: none;
-    }
-    .contact-email:hover { color: var(--accent); }
-
-    /* ─── FOOTER ─────────────────────────────────────────────────────── */
-    .footer {
-      padding: 64px 32px 48px;
-      border-top: 1px solid var(--line);
-      max-width: 1280px;
-      margin: 0 auto;
-    }
-    .footer-rows {
-      display: grid;
-      grid-template-columns: 2fr 1fr 1fr 1fr;
-      gap: 32px;
-      margin-bottom: 48px;
-    }
-    .footer-block .h {
-      font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 0.25em;
-      text-transform: uppercase;
-      color: var(--text-3);
-      margin-bottom: 16px;
-    }
-    .footer-block .row {
-      font-family: var(--tight);
-      font-size: 16px;
-      color: var(--text-2);
-      padding: 6px 0;
-    }
-    .footer-block .row a:hover { color: var(--accent); }
-    .footer-bottom {
-      padding-top: 24px;
-      border-top: 1px solid var(--line);
-      display: flex; justify-content: space-between;
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--text-3);
-      letter-spacing: 0.05em;
-    }
-
-    /* ─── REVEAL ANIM ────────────────────────────────────────────────── */
-    .reveal {
-      opacity: 0;
-      transform: translateY(24px);
-      transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .reveal.in { opacity: 1; transform: translateY(0); }
-
-    /* ─── RESPONSIVE ─────────────────────────────────────────────────── */
-    @media (max-width: 900px) {
-      html, body { cursor: auto; }
-      .cursor { display: none; }
-      a, button, .case, .exp-row, .contact-email, .contact-btn { cursor: pointer; }
-      .nav { padding: 14px 16px; }
-      .nav .links { display: none; }
-      .hero { padding: 100px 16px 16px; }
-      .hero-foot { grid-template-columns: 1fr; gap: 16px; }
-      .about { grid-template-columns: 1fr; gap: 24px; padding: 80px 16px; }
-      .cases-grid { grid-template-columns: 1fr; }
-      .cases { padding: 60px 16px 80px; }
-      .experience { padding: 40px 16px 80px; }
-      .exp-row { grid-template-columns: 1fr; gap: 8px; padding: 24px 0; }
-      .contact { padding: 80px 16px 60px; }
-      .footer { padding: 40px 16px 32px; }
-      .footer-rows { grid-template-columns: 1fr 1fr; }
-      .scroll-prompt { display: none; }
-      .stack-card { min-width: 260px; padding: 24px; }
-      .stack-card .num { font-size: 56px; }
-    }
-  </style>
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:900,700,400|Inter:400,600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Anton:wght@400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <!-- GSAP -->
+  <script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
+  <script src="https://unpkg.com/gsap@3/dist/ScrollTrigger.min.js"></script>
+  <!-- Three.js (for spinning cube + nav hover models) -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.155.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.155.0/examples/jsm/"
+      }
+    }
+  </script>
+  <!-- Model Viewer (for animal heads in experience) -->
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="styles/index.css" />
+  <link rel="stylesheet" href="styles/about.css" />
+  <link rel="stylesheet" href="styles/experience.css?v=2-cardfix" />
+  <link rel="stylesheet" href="styles/spa.css" />
+  <link rel="stylesheet" href="styles/projects-new.css?v=2-cardpolish" />
+  <link rel="stylesheet" href="styles/contact.css" />
+  <link rel="stylesheet" href="styles/bg-effects.css" />
 </head>
-<body>
+<body data-current-route="home">
 
-<div class="cursor" id="cursor"></div>
-
-<!-- ─── NAV ─────────────────────────────────────────────────────────── -->
-<nav class="nav">
-  <a href="#" class="logo">Thomas Ou<span class="dot">.</span></a>
-  <div class="links">
-    <a href="#work" data-cursor><span class="idx">/01</span> Folio</a>
-    <a href="#about" data-cursor><span class="idx">/02</span> Info</a>
-    <a href="#experience" data-cursor><span class="idx">/03</span> Exp</a>
-    <a href="#contact" data-cursor><span class="idx">/04</span> Contact</a>
+  <!-- Background Effects -->
+  <div class="bg-effects" aria-hidden="true">
+    <div class="aurora-blob aurora-blob-1"></div>
+    <div class="aurora-blob aurora-blob-2"></div>
+    <div class="aurora-blob aurora-blob-3"></div>
   </div>
-  <a href="mailto:thomasou@sas.upenn.edu" class="cta" data-cursor>Let's talk →</a>
-</nav>
+  <div class="vignette" aria-hidden="true"></div>
+  <svg class="noise-overlay" aria-hidden="true">
+    <filter id="noise-filter">
+      <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/>
+    </filter>
+    <rect width="100%" height="100%" filter="url(#noise-filter)"/>
+  </svg>
 
-<!-- ─── HERO ────────────────────────────────────────────────────────── -->
-<section class="hero" id="hero">
-  <canvas id="heroCanvas"></canvas>
-
-  <!-- HUD: minimal—clock + location only -->
-  <div class="hud-readout tr">
-    <span class="row"><b>Philadelphia</b></span>
-    <span class="row" id="hudClock">--:--</span>
+  <!-- Scroll Progress Indicator (About Only) -->
+  <div class="scroll-progress about-only">
+    <div class="scroll-progress-bar"></div>
   </div>
 
-  <!-- name stack -->
-  <div class="hero-stack">
-    <span class="nm solid" data-name>Thomas</span>
-    <span class="nm outline" data-name>Ou</span>
-  </div>
 
-  <!-- cycler -->
-  <div class="hero-cycler-row">
-    <span class="br">[</span>
-    <span class="hero-cycler-wrap" id="cyclerWrap">
-      <span class="layer base" id="cyclerBase">Software Engineer</span>
-      <span class="layer glitch-r" id="cyclerR">Software Engineer</span>
-      <span class="layer glitch-g" id="cyclerG">Software Engineer</span>
-    </span>
-    <span class="br">]</span>
-  </div>
-
-  <!-- meta -->
-  <div class="hero-meta">
-    <div class="col"><span class="k">Currently</span><span class="v"><b>Amazon FSx</b> · SWE</span></div>
-    <div class="col"><span class="k">Studying</span><span class="v"><b>UPenn</b> · Math + CS</span></div>
-    <div class="col"><span class="k">Available</span><span class="v">2027 · new grad '28</span></div>
-  </div>
-
-  <!-- 3D widget -->
-  <div class="hero-widget" id="heroWidget">
-    <canvas id="widgetCanvas"></canvas>
-  </div>
-
-  <div class="scroll-prompt-new">SCROLL</div>
-</section>
-
-<!-- ─── MARQUEE ─────────────────────────────────────────────────────── -->
-<div class="marquee-strip">
-  <div class="marquee">
-    <div class="item">Six shipped products <span class="star">★</span></div>
-    <div class="item">50ms arbitrage engine <span class="star">★</span></div>
-    <div class="item">50,000 pages OCR'd <span class="star">★</span></div>
-    <div class="item">Monte Carlo on SIMD <span class="star">★</span></div>
-    <div class="item">Counterfactual regret minimization <span class="star">★</span></div>
-    <div class="item">Maritime defense systems <span class="star">★</span></div>
-    <!-- duplicate for seamless loop -->
-    <div class="item">Six shipped products <span class="star">★</span></div>
-    <div class="item">50ms arbitrage engine <span class="star">★</span></div>
-    <div class="item">50,000 pages OCR'd <span class="star">★</span></div>
-    <div class="item">Monte Carlo on SIMD <span class="star">★</span></div>
-    <div class="item">Counterfactual regret minimization <span class="star">★</span></div>
-    <div class="item">Maritime defense systems <span class="star">★</span></div>
-  </div>
-</div>
-
-<!-- ─── ABOUT ──────────────────────────────────────────────────────── -->
-<section class="about" id="about">
-  <div>
-    <span class="section-eyebrow">(_Info)</span>
-  </div>
-  <div class="about-prose reveal">
-    I'm Thomas, a math and computer science student at the <b>University of Pennsylvania</b>. I build systems that operate on <em>uncertainty and adversaries</em> — poker solvers, prediction markets, plasma physics, computer vision on fight footage, maritime threat detection. <span class="strike">Thought I'd be a quant.</span> Turns out I just like edges. Currently shipping control-plane infrastructure on <b>AWS FSx</b>, available for 2027 summer roles and new grad '28.
-  </div>
-</section>
-
-<!-- ─── ACHIEVEMENT STACK ──────────────────────────────────────────── -->
-<div class="stack">
-  <div class="stack-rail">
-    <div class="stack-card accent">
-      <div class="num">50<small>MS</small></div>
-      <div class="lbl">Detection latency</div>
-      <div class="desc">Cross-platform arbitrage engine at Astera Holdings, prediction markets.</div>
-    </div>
-    <div class="stack-card green">
-      <div class="num">50<small>K</small></div>
-      <div class="lbl">Pages digitized</div>
-      <div class="desc">CV + NLP pipeline on historical defense records at Penn CURF.</div>
-    </div>
-    <div class="stack-card">
-      <div class="num">2.3<small>M</small></div>
-      <div class="lbl">MCCFR iterations</div>
-      <div class="desc">R1VER poker solver, GTO convergence on simplified hold'em.</div>
-    </div>
-    <div class="stack-card accent">
-      <div class="num">6<small> shipped</small></div>
-      <div class="lbl">Production products</div>
-      <div class="desc">From AI DJ to maritime defense — see Selected Work below.</div>
-    </div>
-    <div class="stack-card green">
-      <div class="num">18<small> y/o</small></div>
-      <div class="lbl">Casino exploit</div>
-      <div class="desc">Found a vulnerability in a crypto casino's shuffler. Got hired to fix it.</div>
-    </div>
-    <!-- duplicate for loop -->
-    <div class="stack-card accent">
-      <div class="num">50<small>MS</small></div>
-      <div class="lbl">Detection latency</div>
-      <div class="desc">Cross-platform arbitrage engine at Astera Holdings, prediction markets.</div>
-    </div>
-    <div class="stack-card green">
-      <div class="num">50<small>K</small></div>
-      <div class="lbl">Pages digitized</div>
-      <div class="desc">CV + NLP pipeline on historical defense records at Penn CURF.</div>
-    </div>
-    <div class="stack-card">
-      <div class="num">2.3<small>M</small></div>
-      <div class="lbl">MCCFR iterations</div>
-      <div class="desc">R1VER poker solver, GTO convergence on simplified hold'em.</div>
-    </div>
-    <div class="stack-card accent">
-      <div class="num">6<small> shipped</small></div>
-      <div class="lbl">Production products</div>
-      <div class="desc">From AI DJ to maritime defense — see Selected Work below.</div>
-    </div>
-    <div class="stack-card green">
-      <div class="num">18<small> y/o</small></div>
-      <div class="lbl">Casino exploit</div>
-      <div class="desc">Found a vulnerability in a crypto casino's shuffler. Got hired to fix it.</div>
-    </div>
-  </div>
-</div>
-
-<!-- ─── CASES ───────────────────────────────────────────────────────── -->
-<section class="cases" id="work">
-  <div class="cases-head">
-    <h2 class="title">(_Folio)<br/><em>selected work</em></h2>
-    <div class="meta">
-      <b>06</b> projects shipped<br/>
-      2024 — 2026
-    </div>
-  </div>
-
-  <div class="cases-grid">
-    <a class="case case-d4nce" data-cursor>
-      <div class="case-bg"></div>
-      <div class="case-num">01 / 06</div>
-      <div class="arrow">↗</div>
-      <div class="case-content">
-        <div class="case-info">
-          <div class="name">© D4NCE</div>
-          <div class="role">LLM-driven DJ system · 2025</div>
+  <!-- SPA Content Wrapper -->
+  <div class="spa-content-wrapper">
+    
+    <!-- HOME ROUTE CONTENT -->
+    <div id="home-content" data-route-content style="display: block;">
+      <!-- Thomas Ou heading -->
+      <div class="name-heading home-only page-title">
+        <div class="typing-line-1">
+          <span class="typed-text-1"></span><span class="cursor cursor-1">_</span>
         </div>
-        <div class="case-tag">Audio · LLM</div>
-      </div>
-    </a>
-
-    <a class="case case-v3rsus" data-cursor>
-      <div class="case-bg"></div>
-      <div class="case-num">02 / 06</div>
-      <div class="arrow">↗</div>
-      <div class="case-content">
-        <div class="case-info">
-          <div class="name">© V3RSUS</div>
-          <div class="role">MMA fight prediction · 2025</div>
+        <div class="typing-line-2">
+          <span class="typed-text-2"></span><span class="cursor cursor-2" style="display: none;">_</span>
         </div>
-        <div class="case-tag">ML · Sports</div>
-      </div>
-    </a>
-
-    <a class="case case-r1ver" data-cursor>
-      <div class="case-bg"></div>
-      <div class="case-num">03 / 06</div>
-      <div class="arrow">↗</div>
-      <div class="case-content">
-        <div class="case-info">
-          <div class="name">© R1VER</div>
-          <div class="role">Poker MCCFR solver · 2024</div>
+        <div class="home-subtitles">
+          <span>Developer & Analyst</span>
         </div>
-        <div class="case-tag live">▮ Live demo</div>
       </div>
-    </a>
 
-    <a class="case case-harboros" data-cursor>
-      <div class="case-bg"></div>
-      <div class="case-num">04 / 06</div>
-      <div class="arrow">↗</div>
-      <div class="case-content">
-        <div class="case-info">
-          <div class="name">© HARBOROS</div>
-          <div class="role">Maritime defense platform · 2026</div>
-        </div>
-        <div class="case-tag">Defense · Realtime</div>
+      <!-- 3D Model Container (shown on nav hover) -->
+      <div id="model-container" class="home-only">
+        <canvas id="model-canvas"></canvas>
       </div>
-    </a>
 
-    <a class="case case-str1ke" data-cursor>
-      <div class="case-bg"></div>
-      <div class="case-num">05 / 06</div>
-      <div class="arrow">↗</div>
-      <div class="case-content">
-        <div class="case-info">
-          <div class="name">© STR1KE</div>
-          <div class="role">Strike detection (CV) · 2025</div>
-        </div>
-        <div class="case-tag">CV · Sports</div>
+      <!-- 3D Cube Container -->
+      <div id="cube-container" class="home-only">
+        <canvas id="cube-canvas"></canvas>
       </div>
-    </a>
+    </div>
 
-    <a class="case case-dr4ft" data-cursor>
-      <div class="case-bg"></div>
-      <div class="case-num">06 / 06</div>
-      <div class="arrow">↗</div>
-      <div class="case-content">
-        <div class="case-info">
-          <div class="name">© DR4FT</div>
-          <div class="role">AI resume optimizer · 2024</div>
+    <!-- ABOUT ROUTE CONTENT -->
+    <div id="about-content" data-route-content style="display: none;">
+      <!-- About Container -->
+      <div class="about-container">
+        
+        <!-- About Title -->
+        <div class="about-title page-title">
+          <div class="about-text">
+            <div>ABOUT</div>
+            <div>ME</div>
+          </div>
+          <div class="title-subtitle">Click on underlined words to learn more</div>
         </div>
-        <div class="case-tag">LLM · Tools</div>
+
+        <!-- Main Content -->
+        <div class="about-content">
+          
+          <!-- Profile Section -->
+          <div class="profile-section">
+            <div class="profile-text">
+              <h2>Hi there. I'm <strong>Thomas Ou</strong> and welcome to my personal portfolio. I'm a sophomore at <span class="school-badge"><img src="Images/Penn.png" alt="" class="school-badge-icon" /><span>University of Pennsylvania</span></span> studying Mathematics and Computer Science. I specialize in building <a href="#">full-stack systems</a>, probabilistic models, and the occasional <a href="#">passion project</a> that keeps me up at night.</h2>
+              
+              <div class="profile-image">
+                <img src="Images/ThomasPortrait.png" alt="Thomas Ou" />
+              </div>
+              
+              <p>Tech and math have been part of my life for as long as I can remember. As a kid I was taking apart anything with a circuit board. By high school I was building computers and teaching myself to code. <span class="highlight-sweep">At 18, online poker led me to discover a vulnerability in a crypto casino's shuffling algorithm</span> that created predictable patterns every few hundred hands. I taught myself to exploit it (<em>ethically, of course</em>), and was hired to help fix their system. Since then I've been obsessed with applying algorithmic reasoning through game theory, probabilistic thinking, and machine learning to real-world problems.</p>
+
+              <p>I'm excited by projects that are ambitious, creative, and technically challenging. I enjoy turning complex ideas into intuitive and functional digital experiences, whether it's a rough concept or a fully formed vision. When I'm not studying or coding, you'll find me at Penn Boxing, lifting, playing poker, or listening to some good music.</p>
+
+              <div class="tools-dropdown">
+                <div class="tools-dropdown-header">
+                  <span>Click to see some of the tools I work with.</span>
+                </div>
+                <div class="tools-dropdown-content">
+                  <div class="tools-section">
+                    <h5>Languages</h5>
+                    <div class="tools-icons">
+                      <div class="icon-container"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" alt="Python"><span class="icon-tooltip">Python</span></div>
+                      <div class="icon-container"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/cplusplus/cplusplus-original.svg" alt="C++"><span class="icon-tooltip">C++</span></div>
+                      <div class="icon-container"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/r/r-original.svg" alt="R"><span class="icon-tooltip">R</span></div>
+                      <div class="icon-container"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/ocaml/ocaml-original.svg" alt="OCaml"><span class="icon-tooltip">OCaml</span></div>
+                      <div class="icon-container"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/java/java-original.svg" alt="Java"><span class="icon-tooltip">Java</span></div>
+                      <div class="icon-container"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/matlab/matlab-original.svg" alt="MATLAB"><span class="icon-tooltip">MATLAB</span></div>
+                      <div class="icon-container"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg" alt="HTML5"><span class="icon-tooltip">HTML5</span></div>
+                      <div class="icon-container"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg" alt="CSS"><span class="icon-tooltip">CSS</span></div>
+                      <div class="icon-container"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg" alt="JavaScript"><span class="icon-tooltip">JavaScript</span></div>
+                    </div>
+                  </div>
+                  <div class="tools-section">
+                    <h5>Frameworks</h5>
+                    <div class="tools-icons">
+                      <div class="icon-container"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/numpy/numpy-original.svg" alt="NumPy"><span class="icon-tooltip">NumPy</span></div>
+                      <div class="icon-container"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/pandas/pandas-original.svg" alt="Pandas"><span class="icon-tooltip">Pandas</span></div>
+                      <div class="icon-container"><img src="Images/Icons/Sckit.png" alt="Scikit-learn"><span class="icon-tooltip">Scikit-learn</span></div>
+                      <div class="icon-container"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/pytorch/pytorch-original.svg" alt="PyTorch"><span class="icon-tooltip">PyTorch</span></div>
+                      <div class="icon-container"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg" alt="React"><span class="icon-tooltip">React</span></div>
+                      <div class="icon-container"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/tensorflow/tensorflow-original.svg" alt="TensorFlow"><span class="icon-tooltip">TensorFlow</span></div>
+                      <div class="icon-container"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/matplotlib/matplotlib-original.svg" alt="Matplotlib"><span class="icon-tooltip">Matplotlib</span></div>
+                    </div>
+                  </div>
+                  <div class="tools-section">
+                    <h5>Databases & Tools</h5>
+                    <div class="tools-icons">
+                      <div class="icon-container"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg" alt="MySQL"><span class="icon-tooltip">MySQL</span></div>
+                      <div class="icon-container"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg" alt="PostgreSQL"><span class="icon-tooltip">PostgreSQL</span></div>
+                      <div class="icon-container"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mongodb/mongodb-original.svg" alt="MongoDB"><span class="icon-tooltip">MongoDB</span></div>
+                      <div class="icon-container"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg" alt="Node.js"><span class="icon-tooltip">Node.js</span></div>
+                      <div class="icon-container"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg" alt="Git"><span class="icon-tooltip">Git</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        <!-- Bottom Tagline -->
+        <div class="about-tagline">
+          <div>BUILD.</div>
+          <div>OPTIMIZE.</div>
+          <div>DELIVER.</div>
+        </div>
+        </div>
       </div>
-    </a>
+    </div>
+    
+    <!-- EXPERIENCE ROUTE CONTENT -->
+    <div id="experience-content" data-route-content style="display: none;">
+      <!-- Experience Container -->
+      <div class="experience-container">
+        
+        <!-- Full Width Content -->
+        <div class="content-section">
+          
+          <!-- PROFESSIONAL EXPERIENCE Title -->
+          <div class="journey-title page-title">
+            <div class="journey-text">
+              <div>PROFESSIONAL</div>
+              <div>EXPERIENCE</div>
+            </div>
+            <div class="title-subtitle">Scroll down to learn more</div>
+            
+            <!-- Mobile Hello Content (hidden by default, shown in vertical mode) -->
+            <div class="hello-content-mobile" style="display: none; border: none !important; background: transparent !important;">
+              <!-- Photo + Text Container -->
+              <div style="display: flex; gap: 0.75rem; margin: 0 0 0.5rem 0;">
+                <!-- Profile Photo -->
+                <div class="profile-photo-mobile">
+                  <img src="Images/SchoolPortrait.png" alt="Thomas Ou" />
+                </div>
+
+                <!-- Hello + Bio -->
+                <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+                  <div style="font-size: clamp(1.4rem, min(5vw, 5vh), 2.4rem); font-weight: 400; font-family: 'Anton', Arial, sans-serif; color: #ffffff; margin: 0 0 0.5rem 0; text-align: left; line-height: 1.05; letter-spacing: 0.02em;">Hello. I am Thomas.</div>
+                  <div style="color: #ffffff; font-family: 'Inter', Arial, sans-serif; font-size: clamp(0.85rem, min(2.5vw, 3vh), 1.1rem); line-height: 1.5; opacity: 0.85;">I'm a math and CS student at Penn with experience across quantitative research, derivatives, and defense tech. At present, I'm completing both my undergrad and accelerated master's in Philadelphia, while also conducting research with faculty.</div>
+                </div>
+              </div>
+
+
+              <!-- Navigation Buttons -->
+              <div style="margin: 1rem 0 0 0; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; opacity: 1;">
+                <button class="hello-nav-btn" data-section="education" style="background: transparent; border: 2px solid #ffffff; color: #ffffff; font-family: 'Anton', Arial, sans-serif; font-size: min(0.8rem, 1.8vh); font-weight: 400; text-transform: none; letter-spacing: 0.1em; padding: 0.5rem; border-radius: 8px; cursor: pointer; transition: all 0.3s ease;">Education</button>
+                <button class="hello-nav-btn" data-section="experience" style="background: transparent; border: 2px solid #ffffff; color: #ffffff; font-family: 'Anton', Arial, sans-serif; font-size: min(0.8rem, 1.8vh); font-weight: 400; text-transform: none; letter-spacing: 0.1em; padding: 0.5rem; border-radius: 8px; cursor: pointer; transition: all 0.3s ease;">Experience</button>
+                <button class="hello-nav-btn" data-section="research" style="background: transparent; border: 2px solid #ffffff; color: #ffffff; font-family: 'Anton', Arial, sans-serif; font-size: min(0.8rem, 1.8vh); font-weight: 400; text-transform: none; letter-spacing: 0.1em; padding: 0.5rem; border-radius: 8px; cursor: pointer; transition: all 0.3s ease;">Research</button>
+              </div>
+
+            </div>
+          </div>
+
+          
+          <!-- Left Half - Horse Model -->
+          <div class="left-section">
+
+            <!-- Titles - stacked on top of each other, in flow -->
+            <div class="left-section-titles" style="position: relative; width: 100%; min-height: 8rem; margin-bottom: 0;">
+              <!-- RESEARCH Title (in front of all) -->
+              <div class="research-title" style="position: absolute; top: 0; left: 0; width: 100%; z-index: 3; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;">
+                <div class="research-text" style="font-size: min(9vw, 8rem, 13vh); font-weight: 400; font-family: 'Anton', Arial, sans-serif; color: #ffffff; text-align: center; letter-spacing: 0.05em; text-transform: none; margin: 0; line-height: 0.9; width: 100%;">
+                  <div>RESEARCH</div>
+                </div>
+              </div>
+
+              <!-- EXPERIENCE Title (in front) -->
+              <div class="experience-title" style="position: absolute; top: 0; left: 0; width: 100%; z-index: 2; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;">
+                <div class="experience-text" style="font-size: min(9vw, 8rem, 13vh); font-weight: 400; font-family: 'Anton', Arial, sans-serif; color: #ffffff; text-align: center; letter-spacing: -0.02em; text-transform: none; margin: 0; line-height: 0.9; width: 100%;">
+                  <div>EXPERIENCE</div>
+                </div>
+              </div>
+
+              <!-- EDUCATION Title -->
+              <div class="education-title" style="position: absolute; top: 0; left: 0; width: 100%; z-index: 1;">
+                <div class="education-text" style="font-size: min(9vw, 8rem, 13vh); font-weight: 400; font-family: 'Anton', Arial, sans-serif; color: #ffffff; text-align: center; letter-spacing: -0.02em; text-transform: none; margin: 0; line-height: 0.9; width: 100%;">
+                  <div>EDUCATION</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3D Models - stacked on top of each other, in flow -->
+            <div class="left-section-model" style="position: relative; width: 100%; height: 60vh; flex-shrink: 0; min-height: 60vh; margin-top: -2rem;">
+              <!-- 3D Lion Head (in front of all) -->
+              <div class="lion-container-new" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 7; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; border: none;">
+                <model-viewer
+                  src="Models/lion_head_4k.glb"
+                  alt="3D Lion Head"
+                  auto-rotate
+                  rotation-per-second="30deg"
+                  camera-orbit="0deg 75deg 115%"
+                  field-of-view="30deg"
+                  shadow-intensity="0"
+                  environment-image="neutral"
+                  exposure="1"
+                  shadow-softness="0"
+                  loading="lazy"
+                  reveal="auto"
+                  style="width: 100%; height: 100%;">
+                </model-viewer>
+              </div>
+
+              <!-- 3D Bull Head (in front) -->
+              <div class="bull-container-new" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 6; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; border: none;">
+                <model-viewer
+                  src="Models/bull_head_4k.glb"
+                  alt="3D Bull Head"
+                  auto-rotate
+                  rotation-per-second="30deg"
+                  camera-orbit="0deg 75deg 115%"
+                  field-of-view="30deg"
+                  shadow-intensity="0"
+                  environment-image="neutral"
+                  exposure="1"
+                  shadow-softness="0"
+                  loading="lazy"
+                  reveal="auto"
+                  style="width: 100%; height: 100%;">
+                </model-viewer>
+              </div>
+
+              <!-- 3D Horse Head -->
+              <div class="horse-container visible" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+                <model-viewer
+                  src="Models/horse_head_4k.glb"
+                  alt="3D Horse Head"
+                  auto-rotate
+                  rotation-per-second="30deg"
+                  camera-orbit="0deg 75deg 110%"
+                  field-of-view="30deg"
+                  shadow-intensity="0"
+                  environment-image="neutral"
+                  exposure="1"
+                  shadow-softness="0"
+                  loading="eager"
+                  reveal="auto"
+                  style="width: 100%; height: 100%;">
+                </model-viewer>
+              </div>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="nav-buttons permanent-buttons" style="z-index: 15;">
+              <button class="nav-btn">About</button>
+              <button class="nav-btn">Education</button>
+              <button class="nav-btn">Experience</button>
+              <button class="nav-btn">Research</button>
+            </div>
+          </div>
+
+
+          <!-- Top Container -->
+          <div class="top-container">
+            <!-- Text Content Container -->
+            <div class="text-content-container" style="position: absolute; top: 0; right: 0; height: 100%; padding: 2rem 2rem 2rem 0.5rem; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center;">
+              <!-- Hello Thomas Header -->
+              <div class="hello-section" style="font-size: min(7.5vw, 2.4rem, 5vh); font-weight: 400; font-family: 'Anton', Arial, sans-serif; color: #ffffff; margin: 0; text-align: left; line-height: 1.05; opacity: 0.3; transition: opacity 0.6s ease; letter-spacing: 0.02em;">Hello. I am Thomas.</div>
+              
+              <!-- Bio Section - positioned relative to header -->
+              <div class="hello-section" style="color: #ffffff; font-family: 'Inter', Arial, sans-serif; font-size: min(1.4rem, 3.5vh); line-height: 1.6; margin: 2rem 0 1rem 0; opacity: 0.3; transition: opacity 0.6s ease;">I'm a math and CS student at Penn with experience across quantitative research, derivatives, and defense tech. At present, I'm completing both my undergrad and accelerated master's in Philadelphia, while also conducting research with faculty.</div>
+              
+              
+              <!-- Navigation Buttons - positioned relative to header -->
+              <div class="hello-section" style="margin: 1rem 0 0 0; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; opacity: 0.3; transition: opacity 0.6s ease;">
+                <button class="hello-nav-btn" data-section="education" style="background: transparent; border: 2px solid #ffffff; color: #ffffff; font-family: 'Anton', Arial, sans-serif; font-size: min(0.8rem, 1.8vh); font-weight: 400; text-transform: none; letter-spacing: 0.1em; padding: 0.5rem; border-radius: 8px; cursor: pointer; transition: all 0.3s ease;">Education</button>
+                <button class="hello-nav-btn" data-section="experience" style="background: transparent; border: 2px solid #ffffff; color: #ffffff; font-family: 'Anton', Arial, sans-serif; font-size: min(0.8rem, 1.8vh); font-weight: 400; text-transform: none; letter-spacing: 0.1em; padding: 0.5rem; border-radius: 8px; cursor: pointer; transition: all 0.3s ease;">Experience</button>
+                <button class="hello-nav-btn" data-section="research" style="background: transparent; border: 2px solid #ffffff; color: #ffffff; font-family: 'Anton', Arial, sans-serif; font-size: min(0.8rem, 1.8vh); font-weight: 400; text-transform: none; letter-spacing: 0.1em; padding: 0.5rem; border-radius: 8px; cursor: pointer; transition: all 0.3s ease;">Research</button>
+              </div>
+              
+            </div>
+            
+            <!-- Profile Photo -->
+            <div class="profile-photo hello-visible">
+              <img src="Images/SchoolPortrait.png" alt="Thomas Ou" />
+            </div>
+          </div>
+
+          <!-- Right Half - Content -->
+          <div class="right-section">
+            
+            <!-- Education Section -->
+            <div class="timeline-container">
+              <div class="timeline-track"></div>
+              
+              <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                  <h3>Master of Science in Engineering in Computer and Information Science</h3>
+                  <div class="timeline-school">University of Pennsylvania</div>
+                  <div class="timeline-details">
+                    <div class="course-grid">
+                      <span class="course-pill">Operating Systems</span>
+                      <span class="course-pill">Distributed Systems</span>
+                      <span class="course-pill">Machine Learning</span>
+                      <span class="course-pill">Computer Architecture</span>
+                      <span class="course-pill">Database Systems</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                  <h3>Bachelor of Science in Mathematics/Statistics</h3>
+                  <div class="timeline-school">University of Pennsylvania</div>
+                  <div class="timeline-details">
+                    <div class="course-grid">
+                      <span class="course-pill">Algorithms & Data Structures</span>
+                      <span class="course-pill">Applied Probability</span>
+                      <span class="course-pill">Game Theory</span>
+                      <span class="course-pill">Real Analysis</span>
+                      <span class="course-pill">Abstract Algebra</span>
+                      <span class="course-pill">Probability Theory</span>
+                      <span class="course-pill">Statistical Inference</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Experience Section -->
+            <div class="cards-container experience-cards">
+
+              <div class="card">
+                <div class="card-header">
+                  <h3>Software Engineer</h3>
+                  <div class="card-company">Amazon</div>
+                  <div class="card-location">May 2026 - Sept 2026</div>
+                </div>
+                <div class="card-preview">
+                  <p>Working on Amazon FSx — the managed file-storage service layered on NetApp ONTAP, Lustre, OpenZFS, and Windows File Server — building and scaling the control-plane services that provision, monitor, and heal petabyte-scale file systems for AWS customers.</p>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-header">
+                  <h3>Quantitative Developer</h3>
+                  <div class="card-company">Astera Holdings</div>
+                  <div class="card-location">Jan 2025 - May 2025</div>
+                </div>
+                <div class="card-preview">
+                  <p>Built a low-latency prediction market arbitrage engine in Python that detected and executed cross-platform pricing discrepancies in under 50 milliseconds across 50+ trading pairs.</p>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-header">
+                  <h3>Data Engineer</h3>
+                  <div class="card-company">Flushing CPA Tax Center</div>
+                  <div class="card-location">Jun 2024 - Aug 2024</div>
+                </div>
+                <div class="card-preview">
+                  <p>Built automation scripts and predictive models at a CPA firm to streamline large-scale financial reconciliation and enable forward-looking tax advisory for corporate clients.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Spacer between sections -->
+            <div style="height: 2rem; margin: 1rem 0;"></div>
+
+            <!-- Research Section -->
+            <div class="cards-container research-cards">
+
+              <div class="card">
+                <div class="card-header">
+                  <h3>Research Assistant</h3>
+                  <div class="card-company">Penn Center for Undergraduate Research and Fellowships</div>
+                  <div class="card-location">Jul 2025 - Present</div>
+                </div>
+                <div class="card-preview">
+                  <p>Built computer vision and NLP pipelines to digitize 50,000+ pages of historical defense records and conducted quantitative analysis that surfaced significant shifts in government spending patterns.</p>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-header">
+                  <h3 class="card-title-stacked">
+                    <span class="card-title-line">Research Assistant</span>
+                    <span class="card-title-line card-title-line--second">(Computational Physics)</span>
+                  </h3>
+                  <div class="card-company">Princeton Plasma Physics Laboratory</div>
+                  <div class="card-location">Feb 2024 - Apr 2024</div>
+                </div>
+                <div class="card-preview">
+                  <p>Optimized Monte Carlo plasma simulations at a DOE fusion research lab through low-level SIMD vectorization and parallel computing, and automated large-scale regression testing infrastructure.</p>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Resume Link beneath research -->
+            <div style="text-align: center; margin: 4rem 0;">
+              <a href="#" class="resume-link" style="display: inline-block; background: transparent; border: 2px solid #ffffff; color: #ffffff; font-family: 'Montserrat', 'Inter', Arial, sans-serif; font-size: min(1.1rem, 2.4vh); font-weight: 600; text-transform: none; letter-spacing: 0.05em; padding: 1rem 2rem; border-radius: 8px; text-decoration: none; transition: all 0.3s ease; position: relative; overflow: hidden;">
+                <span style="position: relative; z-index: 2;">See My Resume</span>
+                <div style="position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent); transition: left 0.6s ease;"></div>
+              </a>
+            </div>
+
+            <!-- Spacer beneath research -->
+            <div style="height: 2rem; margin: 1rem 0;"></div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROJECTS ROUTE CONTENT -->
+    <div id="projects-content" data-route-content style="display: none;">
+      <!-- Projects Container -->
+      <div class="projects-container projects-only">
+        
+        <!-- Featured Projects Section -->
+        <div class="section-title projects-only page-title">
+          <div class="title-featured">FEATURED</div>
+          <div class="title-projects">PROJECTS</div>
+          <div class="title-subtitle">Click on a project to view details</div>
+        </div>
+        
+        <!-- Projects Wheel -->
+        <div class="projects-wheel projects-only">
+          <div class="wheel-container">
+            <div class="project-card" data-project="fightvision">
+              <div class="project-image" style="background-image: url('Images/ProjectPhotos/STR1KE.gif');"></div>
+              <div class="project-header">
+                <h3>STR1KE — MMA Strike Detection</h3>
+              </div>
+            </div>
+
+            <div class="project-card" data-project="dj">
+              <div class="project-image" style="background-image: url('Images/ProjectPhotos/D4NCE.gif');"></div>
+              <div class="project-header">
+                <h3>D4NCE — AI-Powered DJ System</h3>
+              </div>
+            </div>
+
+            <div class="project-card" data-project="fightiq">
+              <div class="project-image" style="background-image: url('Images/ProjectPhotos/V3RSUS.gif');"></div>
+              <div class="project-header">
+                <h3>V3RSUS — MMA Predictive Analytics</h3>
+              </div>
+            </div>
+            
+            <div class="project-card" data-project="harboros">
+              <div class="project-image" style="background-image: url('Images/ProjectPhotos/HARBOROS.gif');"></div>
+              <div class="project-header">
+                <h3>HarborOS — Maritime Defense Platform</h3>
+              </div>
+            </div>
+            
+            <div class="project-card" data-project="poker">
+              <div class="project-image" style="background-image: url('Images/ProjectPhotos/R1VER1.gif');"></div>
+              <div class="project-header">
+                <h3>R1VER — Poker Intelligence (MCCFR Solver)</h3>
+              </div>
+            </div>
+
+            <div class="project-card" data-project="smartcv">
+              <div class="project-image" style="background-image: url('Images/ProjectPhotos/DR4FT.gif');"></div>
+              <div class="project-header">
+                <h3>DR4FT — AI Resume Optimizer</h3>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Full-screen Modal for project details -->
+        <div id="projectModal" class="project-fullscreen-modal projects-only">
+          <div class="fullscreen-modal-content">
+            <div class="project-hero-section">
+              <div class="back-to-projects-container">
+                <div class="back-to-projects" id="backToProjects">← Back to Projects</div>
+              </div>
+              <div class="project-hero-image" id="projectHeroImageContainer">
+                <div class="project-hero-image-inner">
+                  <img id="projectHeroImage" src="" alt="" />
+                  <button class="gallery-prev" id="galleryPrev" aria-label="Previous image">&#8249;</button>
+                  <button class="gallery-next" id="galleryNext" aria-label="Next image">&#8250;</button>
+                </div>
+                <div class="gallery-dots" id="galleryDots" aria-label="Gallery images"></div>
+              </div>
+              <div class="project-hero-info">
+                <h1 id="projectTitle" class="project-title"></h1>
+                <p id="projectDescription" class="project-description"></p>
+                <div id="projectTechStack" class="project-tech-stack"></div>
+                <div id="projectLinks" class="project-links project-links-inline"></div>
+              </div>
+            </div>
+            <div id="projectFeatures" class="project-features-grid"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Image Lightbox -->
+    <div class="image-lightbox" id="imageLightbox">
+      <img src="" alt="Zoomed image" id="lightboxImage">
+    </div>
+
+    <!-- CONTACT ROUTE CONTENT -->
+    <div id="contact-content" data-route-content style="display: none;">
+      <!-- Contact Container (background only) -->
+      <div class="contact-container contact-only">
+      </div>
+
+      <!-- CONTACT ME Title (outside container) -->
+      <div class="journey-title contact-only page-title">
+        <div class="journey-text">
+          <div>CONTACT</div>
+          <div>ME</div>
+        </div>
+      </div>
+
+      <!-- Current Focus -->
+      <!-- Contact Buttons (outside container) -->
+      <div class="contact-buttons contact-only">
+        <button class="contact-btn" data-contact="email">
+          <svg viewBox="0 0 24 24">
+            <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+          </svg>
+          Email Me
+        </button>
+        <button class="contact-btn" data-contact="linkedin">
+          <svg viewBox="0 0 24 24">
+            <path d="M20.5 2h-17A1.5 1.5 0 002 3.5v17A1.5 1.5 0 003.5 22h17a1.5 1.5 0 001.5-1.5v-17A1.5 1.5 0 0020.5 2zM8 19H5v-9h3zM6.5 8.25A1.75 1.75 0 118.3 6.5a1.78 1.78 0 01-1.8 1.75zM19 19h-3v-4.74c0-1.42-.6-1.93-1.38-1.93A1.74 1.74 0 0013 14.19a.66.66 0 000 .14V19h-3v-9h2.9v1.3a3.11 3.11 0 012.7-1.4c1.55 0 3.36.86 3.36 3.66z"/>
+          </svg>
+          Connect
+        </button>
+        <button class="contact-btn" data-contact="github">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.30.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+          </svg>
+          See My Code
+        </button>
+      </div>
+
+    </div>
+
   </div>
-</section>
 
-<!-- ─── EXPERIENCE LIST ────────────────────────────────────────────── -->
-<section class="experience" id="experience">
-  <div class="cases-head" style="margin-bottom: 32px;">
-    <h2 class="title">(_Experience)<br/><em>where I've shipped</em></h2>
-    <div class="meta">
-      <b>2024 →</b><br/>present
+
+  <!-- Mobile Menu Button (vertical mode only) -->
+  <div class="mobile-menu-btn" style="position: fixed; bottom: 1rem; right: 1rem; z-index: 10000; width: 50px; height: 50px; background: rgba(10, 10, 22, 0.3); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 50%; cursor: pointer; align-items: center; justify-content: center; border: 1px solid rgba(255, 255, 255, 0.1);">
+    <div class="hamburger">
+      <span style="display: block; width: 20px; height: 2px; background: #ffffff; margin: 3px 0; transition: 0.3s; border-radius: 1px;"></span>
+      <span style="display: block; width: 20px; height: 2px; background: #ffffff; margin: 3px 0; transition: 0.3s; border-radius: 1px;"></span>
+      <span style="display: block; width: 20px; height: 2px; background: #ffffff; margin: 3px 0; transition: 0.3s; border-radius: 1px;"></span>
     </div>
   </div>
 
-  <div class="exp-row" data-cursor>
-    <span class="exp-year">/01 · 2026</span>
-    <span class="exp-org">Amazon</span>
-    <span class="exp-role">Software engineer · FSx control plane · petabyte-scale managed file systems</span>
-    <span class="exp-arrow">SWE →</span>
+  <!-- Nav auto-show trigger zone (small screens) -->
+  <div class="nav-trigger-zone"></div>
+  <div class="nav-trigger-dot"></div>
+
+  <!-- Scripts -->
+  <script defer src="js/spa-router.js"></script>
+  <script defer src="js/spa-projects-new.js"></script>
+  <script defer src="js/spa-init.js"></script>
+  <script defer src="js/3d-cube.js"></script>
+  <script defer src="js/dynamic-models.js"></script>
+  <script defer src="js/navigation.js"></script>
+  <script defer src="js/about.js"></script>
+  <script defer src="js/experience.js"></script>
+  <script defer src="js/contact.js"></script>
+
+  <!-- Resume notification toast -->
+  <div id="resume-toast" class="resume-toast" role="alert" aria-live="polite">
+    <p>Resume will be sent upon request. Send me an email at <a href="mailto:thomasou@sas.upenn.edu">thomasou@sas.upenn.edu</a></p>
+    <button type="button" class="resume-toast-close" aria-label="Close">&times;</button>
   </div>
-  <div class="exp-row" data-cursor>
-    <span class="exp-year">/02 · 2025</span>
-    <span class="exp-org">Astera Holdings</span>
-    <span class="exp-role">Quantitative developer · 50ms cross-platform arbitrage engine on prediction markets</span>
-    <span class="exp-arrow">QUANT →</span>
+
+  <!-- Bottom navigation -->
+  <div class="bottom-nav">
+    <a href="#" data-spa-route="home" class="nav-link active">home</a>
+    <a href="#" data-spa-route="about" class="nav-link">about</a>
+    <a href="#" data-spa-route="experience" class="nav-link">experience</a>
+    <a href="#" data-spa-route="projects" class="nav-link">projects</a>
+    <a href="#" data-spa-route="contact" class="nav-link">contact</a>
   </div>
-  <div class="exp-row" data-cursor>
-    <span class="exp-year">/03 · 2025</span>
-    <span class="exp-org">Penn CURF</span>
-    <span class="exp-role">Research assistant · CV + NLP pipeline digitizing 50,000 pages of historical defense records</span>
-    <span class="exp-arrow">RESEARCH →</span>
-  </div>
-  <div class="exp-row" data-cursor>
-    <span class="exp-year">/04 · 2024</span>
-    <span class="exp-org">Princeton Plasma Physics Lab</span>
-    <span class="exp-role">Research assistant · Monte Carlo plasma simulations, SIMD vectorization for 8x speedup</span>
-    <span class="exp-arrow">RESEARCH →</span>
-  </div>
-  <div class="exp-row" data-cursor>
-    <span class="exp-year">/05 · 2024</span>
-    <span class="exp-org">Flushing CPA Tax Center</span>
-    <span class="exp-role">Data engineer · Automation scripts + predictive models for corporate tax advisory</span>
-    <span class="exp-arrow">DATA →</span>
-  </div>
-</section>
-
-<!-- ─── CONTACT ─────────────────────────────────────────────────────── -->
-<section class="contact" id="contact">
-  <div class="eyebrow">(_Contact)</div>
-  <h2>Let's<br/><em>build</em></h2>
-  <div class="contact-buttons">
-    <a class="contact-btn primary" href="mailto:thomasou@sas.upenn.edu" data-cursor>Email me →</a>
-    <a class="contact-btn" href="#" data-cursor>LinkedIn</a>
-    <a class="contact-btn" href="#" data-cursor>GitHub</a>
-    <a class="contact-btn" href="#" data-cursor>Resume on request</a>
-  </div>
-  <a class="contact-email" href="mailto:thomasou@sas.upenn.edu" data-cursor>thomasou@sas.upenn.edu ↗</a>
-</section>
-
-<!-- ─── FOOTER ──────────────────────────────────────────────────────── -->
-<footer class="footer">
-  <div class="footer-rows">
-    <div class="footer-block">
-      <div class="h">Currently</div>
-      <div class="row">Amazon FSx · SWE · Seattle</div>
-      <div class="row" style="color: var(--text-3); font-size: 13px;">May → Sept 2026</div>
-    </div>
-    <div class="footer-block">
-      <div class="h">Find me</div>
-      <div class="row"><a href="mailto:thomasou@sas.upenn.edu" data-cursor>Email</a></div>
-      <div class="row"><a href="#" data-cursor>GitHub</a></div>
-      <div class="row"><a href="#" data-cursor>LinkedIn</a></div>
-    </div>
-    <div class="footer-block">
-      <div class="h">Sitemap</div>
-      <div class="row"><a href="#about" data-cursor>About</a></div>
-      <div class="row"><a href="#work" data-cursor>Work</a></div>
-      <div class="row"><a href="#experience" data-cursor>Experience</a></div>
-      <div class="row"><a href="#contact" data-cursor>Contact</a></div>
-    </div>
-    <div class="footer-block">
-      <div class="h">Off-screen</div>
-      <div class="row" style="color: var(--text-3); font-size: 13px;">Penn Boxing</div>
-      <div class="row" style="color: var(--text-3); font-size: 13px;">Lifting</div>
-      <div class="row" style="color: var(--text-3); font-size: 13px;">Online poker</div>
-      <div class="row" style="color: var(--text-3); font-size: 13px;">Good music</div>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <span>© 2026 Thomas Ou · ThomasOu V1.0 · All Rights Reserved</span>
-    <span>Philadelphia · EST · <span id="footerClock">—:—</span></span>
-  </div>
-</footer>
-
-<script>
-  // ─── CUSTOM CURSOR ─────────────────────────────────────────────────
-  const cursor = document.getElementById('cursor');
-  let mx = 0, my = 0, cx = 0, cy = 0;
-  document.addEventListener('mousemove', (e) => { mx = e.clientX; my = e.clientY; });
-  function tick() {
-    cx += (mx - cx) * 0.18;
-    cy += (my - cy) * 0.18;
-    cursor.style.transform = `translate(${cx}px, ${cy}px) translate(-50%, -50%)`;
-    requestAnimationFrame(tick);
-  }
-  tick();
-
-  document.querySelectorAll('[data-cursor]').forEach(el => {
-    el.addEventListener('mouseenter', () => cursor.classList.add('lg'));
-    el.addEventListener('mouseleave', () => cursor.classList.remove('lg'));
-  });
-
-  // ─── REVEAL ON SCROLL ──────────────────────────────────────────────
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
-  }, { threshold: 0.15 });
-  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
-
-  // ─── HERO CYCLER — scramble + RGB glitch ────────────────────────────
-  (function() {
-    const wrap = document.getElementById('cyclerWrap');
-    const base = document.getElementById('cyclerBase');
-    const lr   = document.getElementById('cyclerR');
-    const lg   = document.getElementById('cyclerG');
-    if (!wrap || !base) return;
-
-    const WORDS = ['Software Engineer', 'Quant Researcher', 'Systems Builder', 'Edge Operator', 'GTO Solver', 'Poker Strategist'];
-    let idx = 0;
-    const sleep = ms => new Promise(r => setTimeout(r, ms));
-    const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!<>-_\\/[]{}—=+*?#';
-    const rg = () => GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
-
-    const writeAll = s => { base.textContent = s; lr.textContent = s; lg.textContent = s; };
-
-    const scrambleTo = (target) => new Promise(resolve => {
-      const startLen = base.textContent.length;
-      const maxLen = Math.max(startLen, target.length);
-      const scrambleFrames = 18;
-      const lockStagger = 3;
-      const lockAt = [];
-      for (let i = 0; i < maxLen; i++) lockAt.push(scrambleFrames + i * lockStagger);
-      const totalFrames = (lockAt[lockAt.length - 1] || scrambleFrames) + 8;
-      let f = 0;
-      const tick = () => {
-        f++;
-        let s = '';
-        for (let i = 0; i < maxLen; i++) {
-          const tch = target[i] || '';
-          if (f >= lockAt[i]) s += tch;
-          else if (tch === ' ') s += ' ';
-          else if (i >= target.length) s += f > scrambleFrames + 4 ? '' : rg();
-          else s += rg();
-        }
-        writeAll(s);
-        if (f >= totalFrames) { writeAll(target); resolve(); return; }
-        requestAnimationFrame(tick);
-      };
-      requestAnimationFrame(tick);
-    });
-
-    const triggerGlitch = async () => {
-      wrap.classList.add('glitching');
-      await sleep(220);
-      wrap.classList.remove('glitching');
-    };
-
-    writeAll('Software Engineer');
-    (async () => {
-      await sleep(1600);
-      while (true) {
-        idx = (idx + 1) % WORDS.length;
-        triggerGlitch();
-        await scrambleTo(WORDS[idx]);
-        await sleep(2200);
-      }
-    })();
-  })();
-</script>
-
-<script>
-  /* ════════════════════════════════════════════════════════════════════
-     HERO BLUEPRINT PIPELINE
-     ──────────────────────────────────────────────────────────────────
-     1. WebGL shader plane behind the type (custom FBM noise + cursor
-        ripple + scroll-velocity warp + RGB chromatic aberration)
-     2. Drag-rotate wireframe icosahedron widget (Three.js custom shader)
-     3. Letter-split name intro (GSAP timeline, char stagger)
-     4. Live HUD readouts (clock, mouse XY, scroll%, viewport, FPS)
-     5. Annotation reveal choreography
-     ════════════════════════════════════════════════════════════════════ */
-  (function() {
-    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const mobile = matchMedia('(max-width: 900px)').matches;
-    const hero = document.getElementById('hero');
-    if (!hero || !window.THREE) return;
-
-    /* ── 1. Letter-split name ───────────────────────────────────────── */
-    document.querySelectorAll('[data-name]').forEach(el => {
-      const text = el.textContent;
-      el.textContent = '';
-      [...text].forEach(c => {
-        const s = document.createElement('span');
-        s.className = 'char';
-        s.textContent = c === ' ' ? '\u00A0' : c;
-        el.appendChild(s);
-      });
-    });
-
-    if (!reduce) {
-      gsap.set('.hero-stack .nm .char', { yPercent: 110, opacity: 0, rotateZ: 6 });
-      gsap.set('.hero-cycler-row', { opacity: 0, y: 12 });
-      gsap.set('.hero-meta', { opacity: 0, y: 12 });
-      gsap.set('.scroll-prompt-new', { opacity: 0, y: 14 });
-
-      const tl = gsap.timeline({ delay: 0.2 });
-      tl.to('.hero-stack .nm .char', {
-        yPercent: 0, opacity: 1, rotateZ: 0,
-        duration: 1.3, stagger: 0.035, ease: 'expo.out'
-      }, 0)
-      .to('.hero-cycler-row', { opacity: 1, y: 0, duration: 0.8, ease: 'expo.out' }, 0.4)
-      .to('.hero-meta', { opacity: 1, y: 0, duration: 0.9, ease: 'expo.out' }, 0.7)
-      .to('.scroll-prompt-new', { opacity: 1, y: 0, duration: 0.8, ease: 'expo.out' }, 1.0);
-    }
-
-    /* ── 2. WebGL shader plane (FBM noise + ripple) ─────────────────── */
-    const canvas = document.getElementById('heroCanvas');
-    let renderer = null, scene = null, camera = null, planeMat = null;
-    try {
-      renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-      scene = new THREE.Scene();
-      camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
-      camera.position.z = 1;
-
-      const planeGeom = new THREE.PlaneGeometry(2, 2);
-      planeMat = new THREE.ShaderMaterial({
-      transparent: true,
-      depthWrite: false,
-      uniforms: {
-        uTime:       { value: 0 },
-        uMouse:      { value: new THREE.Vector2(99, 99) },
-        uMouseAct:   { value: 0 },
-        uScroll:     { value: 0 },
-        uScrollVel:  { value: 0 },
-        uAspect:     { value: 1 },
-        uAccent:     { value: new THREE.Color(0xff5230) },
-        uGreen:      { value: new THREE.Color(0x62ff7a) },
-        uBg:         { value: new THREE.Color(0x0a0a0a) },
-      },
-      vertexShader: `
-        varying vec2 vUv;
-        void main() { vUv = uv; gl_Position = vec4(position, 1.0); }
-      `,
-      fragmentShader: `
-        precision highp float;
-        varying vec2 vUv;
-        uniform float uTime;
-        uniform vec2  uMouse;
-        uniform float uMouseAct;
-        uniform float uScroll;
-        uniform float uScrollVel;
-        uniform float uAspect;
-        uniform vec3  uAccent;
-        uniform vec3  uGreen;
-        uniform vec3  uBg;
-
-        /* hash + value noise + FBM */
-        float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-        float vnoise(vec2 p) {
-          vec2 i = floor(p), f = fract(p);
-          float a = hash(i), b = hash(i + vec2(1.0, 0.0));
-          float c = hash(i + vec2(0.0, 1.0)), d = hash(i + vec2(1.0, 1.0));
-          vec2 u = f * f * (3.0 - 2.0 * f);
-          return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
-        }
-        float fbm(vec2 p) {
-          float v = 0.0, amp = 0.5;
-          for (int i = 0; i < 5; i++) {
-            v += amp * vnoise(p);
-            p *= 2.02;
-            amp *= 0.5;
-          }
-          return v;
-        }
-
-        /* sample helper for chromatic aberration */
-        float fieldAt(vec2 uv) {
-          vec2 p = uv * 2.0 - 1.0;
-          p.x *= uAspect;
-
-          /* base FBM with slow drift + scroll-bound shear */
-          vec2 q = p * 1.2 + vec2(uTime * 0.05, -uTime * 0.03);
-          q.y += uScroll * 0.4 + uScrollVel * 0.6;
-          float n = fbm(q);
-
-          /* warped FBM with second octave */
-          vec2 r = q + vec2(fbm(q + 5.0), fbm(q + uTime * 0.1));
-          n = fbm(r);
-
-          /* cursor ripple */
-          vec2 m = uMouse; m.x *= uAspect;
-          float d = distance(p, m);
-          float ripple = exp(-d * 2.8) * uMouseAct;
-          float wave = sin(d * 18.0 - uTime * 4.0) * 0.5 * ripple;
-
-          return n + wave + ripple * 0.25;
-        }
-
-        void main() {
-          vec2 uv = vUv;
-
-          /* chromatic split — sample 3 offsets per channel */
-          float aberration = 0.004 + uScrollVel * 0.02;
-          float fr = fieldAt(uv + vec2(aberration, 0.0));
-          float fg = fieldAt(uv);
-          float fb = fieldAt(uv - vec2(aberration, 0.0));
-
-          /* contour bands — push into bg or into accent depending on level */
-          float band = smoothstep(0.42, 0.58, fg);
-          vec3 col = mix(uBg, mix(uAccent * 0.6, uGreen * 0.4, sin(uTime * 0.3) * 0.5 + 0.5), band * 0.18);
-
-          /* RGB drift adds the chromatic aberration */
-          col.r += (fr - fg) * 0.5;
-          col.b += (fb - fg) * 0.5;
-
-          /* vignette */
-          vec2 vc = uv - 0.5;
-          float vig = smoothstep(0.95, 0.35, dot(vc, vc) * 1.4);
-
-          /* scanline */
-          float scan = sin(uv.y * 1200.0) * 0.015;
-          col += scan;
-
-          /* dim overall so it sits behind text */
-          col *= 0.55 * vig;
-
-          /* output with low alpha so type stays dominant */
-          float alpha = 0.85 * vig;
-          gl_FragColor = vec4(col, alpha);
-        }
-      `,
-    });
-      scene.add(new THREE.Mesh(planeGeom, planeMat));
-    } catch (err) {
-      console.error('[hero] FBM shader pipeline failed:', err);
-      if (canvas) canvas.style.display = 'none';
-      renderer = null;
-    }
-
-    const setSize = () => {
-      if (!renderer || !planeMat) return;
-      const r = hero.getBoundingClientRect();
-      renderer.setSize(r.width, r.height, false);
-      planeMat.uniforms.uAspect.value = r.width / r.height;
-    };
-    setSize();
-    window.addEventListener('resize', setSize);
-
-    /* ── 3. Mouse + scroll state ────────────────────────────────────── */
-    const state = {
-      mx: 99, my: 99, tx: 99, ty: 99, mAct: 0, tAct: 0,
-      scroll: 0, lastScrollY: 0, scrollVel: 0, scrollVelTarget: 0,
-    };
-    window.addEventListener('mousemove', (e) => {
-      const r = hero.getBoundingClientRect();
-      if (e.clientY < r.bottom && e.clientY > r.top) {
-        state.tx = ((e.clientX - r.left) / r.width) * 2 - 1;
-        state.ty = -(((e.clientY - r.top) / r.height) * 2 - 1);
-        state.tAct = 1;
-      } else {
-        state.tAct = 0;
-      }
-    });
-    window.addEventListener('mouseout', () => { state.tAct = 0; });
-
-    /* ── 4. Wireframe widget — icosahedron with custom shader ──────── */
-    const wCanvas = document.getElementById('widgetCanvas');
-    const widget = document.getElementById('heroWidget');
-    let widgetRenderer, widgetScene, widgetCam, widgetMesh;
-    if (wCanvas && !mobile) {
-      widgetRenderer = new THREE.WebGLRenderer({ canvas: wCanvas, antialias: true, alpha: true });
-      widgetRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      widgetRenderer.setSize(280, 280, false);
-
-      widgetScene = new THREE.Scene();
-      widgetCam = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-      widgetCam.position.z = 3.5;
-
-      const iGeom = new THREE.IcosahedronGeometry(1.1, 1);
-      const wireMat = new THREE.ShaderMaterial({
-        transparent: true,
-        wireframe: true,
-        uniforms: {
-          uTime: { value: 0 },
-          uAccent: { value: new THREE.Color(0xff5230) },
-          uText: { value: new THREE.Color(0xa8a8a8) },
-        },
-        vertexShader: `
-          varying vec3 vPos;
-          uniform float uTime;
-          void main() {
-            vPos = position;
-            vec3 p = position;
-            p += normal * sin(uTime * 1.2 + position.y * 4.0) * 0.04;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
-          }
-        `,
-        fragmentShader: `
-          varying vec3 vPos;
-          uniform vec3 uAccent;
-          uniform vec3 uText;
-          uniform float uTime;
-          void main() {
-            float t = sin(vPos.x * 4.0 + uTime * 0.8) * 0.5 + 0.5;
-            vec3 col = mix(uText, uAccent, t * 0.6);
-            gl_FragColor = vec4(col, 0.85);
-          }
-        `,
-      });
-      widgetMesh = new THREE.Mesh(iGeom, wireMat);
-      widgetScene.add(widgetMesh);
-
-      /* drag-rotate */
-      const drag = { active: false, lx: 0, ly: 0, rx: 0.4, ry: 0.4, vx: 0.005, vy: 0.003 };
-      widget.addEventListener('mousedown', (e) => {
-        drag.active = true; drag.lx = e.clientX; drag.ly = e.clientY;
-        widget.classList.add('grabbing'); e.preventDefault();
-      });
-      window.addEventListener('mouseup', () => { drag.active = false; widget.classList.remove('grabbing'); });
-      window.addEventListener('mousemove', (e) => {
-        if (!drag.active) return;
-        const dx = (e.clientX - drag.lx) * 0.01;
-        const dy = (e.clientY - drag.ly) * 0.01;
-        drag.ry += dx;
-        drag.rx += dy;
-        drag.vx = dy * 0.6 + 0.005;
-        drag.vy = dx * 0.6 + 0.003;
-        drag.lx = e.clientX; drag.ly = e.clientY;
-      });
-      widget._drag = drag;
-    }
-
-    /* ── 5. HUD readouts ────────────────────────────────────────────── */
-    const elClock = document.getElementById('hudClock');
-    const elPtrX = document.getElementById('hudPtrX');
-    const elPtrY = document.getElementById('hudPtrY');
-    const elScroll = document.getElementById('hudScroll');
-    const elView = document.getElementById('hudView');
-    const elFps = document.getElementById('hudFps');
-
-    const tickClock = () => {
-      const d = new Date();
-      const t = d.toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour12: false });
-      if (elClock) elClock.textContent = t;
-    };
-    tickClock(); setInterval(tickClock, 1000);
-
-    let rawPtrX = 0, rawPtrY = 0;
-    window.addEventListener('mousemove', (e) => { rawPtrX = e.clientX; rawPtrY = e.clientY; });
-    const fmt4 = n => {
-      const s = Math.abs(Math.round(n)).toString().padStart(4, '0');
-      return (n < 0 ? '-' : '+') + s;
-    };
-
-    const updateView = () => {
-      if (elView) elView.textContent = window.innerWidth + ' × ' + window.innerHeight;
-    };
-    updateView();
-    window.addEventListener('resize', updateView);
-
-    let lastScrollY = 0;
-    window.addEventListener('scroll', () => {
-      const doc = document.documentElement;
-      const max = doc.scrollHeight - window.innerHeight;
-      const pct = max > 0 ? (window.scrollY / max) * 100 : 0;
-      if (elScroll) elScroll.textContent = Math.min(100, Math.round(pct)).toString().padStart(3, '0');
-      const dy = window.scrollY - lastScrollY;
-      state.scrollVelTarget = Math.min(1, Math.abs(dy) / 30);
-      lastScrollY = window.scrollY;
-      state.scroll = window.scrollY / window.innerHeight;
-    });
-
-    /* FPS counter */
-    let fpsT = performance.now(), frames = 0, fps = 60;
-    const updateFps = (now) => {
-      frames++;
-      if (now - fpsT >= 500) {
-        fps = Math.round((frames * 1000) / (now - fpsT));
-        if (elFps) elFps.textContent = fps;
-        frames = 0; fpsT = now;
-      }
-    };
-
-    /* ── 6. Main render loop ────────────────────────────────────────── */
-    const clock = new THREE.Clock();
-    function loop() {
-      const now = performance.now();
-      const t = clock.getElapsedTime();
-
-      /* lerp mouse */
-      state.mx += (state.tx - state.mx) * 0.12;
-      state.my += (state.ty - state.my) * 0.12;
-      state.mAct += (state.tAct - state.mAct) * 0.06;
-      state.scrollVel += (state.scrollVelTarget - state.scrollVel) * 0.08;
-      state.scrollVelTarget *= 0.9;
-
-      if (planeMat) {
-        planeMat.uniforms.uTime.value = t;
-        planeMat.uniforms.uMouse.value.set(state.mx, state.my);
-        planeMat.uniforms.uMouseAct.value = state.mAct;
-        planeMat.uniforms.uScroll.value = state.scroll;
-        planeMat.uniforms.uScrollVel.value = state.scrollVel;
-      }
-
-      if (renderer && scene && camera) renderer.render(scene, camera);
-
-      /* widget */
-      if (widgetMesh) {
-        const d = widget._drag;
-        if (!d.active) {
-          d.ry += d.vy;
-          d.rx += d.vx * 0.4;
-          d.vy *= 0.985;
-          d.vx *= 0.985;
-          d.vy += (0.005 - d.vy) * 0.01;
-          d.vx += (0.003 - d.vx) * 0.01;
-        }
-        widgetMesh.rotation.x = d.rx;
-        widgetMesh.rotation.y = d.ry;
-        widgetMesh.material.uniforms.uTime.value = t;
-        widgetRenderer.render(widgetScene, widgetCam);
-      }
-
-      /* HUD ptr */
-      if (elPtrX) elPtrX.textContent = fmt4(rawPtrX);
-      if (elPtrY) elPtrY.textContent = fmt4(rawPtrY);
-
-      updateFps(now);
-      requestAnimationFrame(loop);
-    }
-    loop();
-  })();
-</script>
-
-<script>
-  (function() {
-    const el = document.getElementById('footerClock');
-    if (!el) return;
-    const t = () => { el.textContent = new Date().toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', hour12: false }); };
-    t(); setInterval(t, 30000);
-  })();
-</script>
 
 </body>
 </html>

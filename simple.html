@@ -1,0 +1,1723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thomas Ou — Software Engineer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Inter+Tight:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <style>
+    :root {
+      --bg:        #0a0a0a;
+      --bg-2:      #121212;
+      --bg-3:      #1a1a1a;
+      --line:      #262626;
+      --text:      #f5f5f5;
+      --text-2:    #a8a8a8;
+      --text-3:    #6a6a6a;
+      --accent:    #ff5230;
+      --green:     #62ff7a;
+      --tight:     'Inter Tight', -apple-system, system-ui, sans-serif;
+      --sans:      'Inter', -apple-system, system-ui, sans-serif;
+      --mono:      'JetBrains Mono', ui-monospace, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      cursor: none;
+    }
+    body { overflow-x: hidden; }
+    a { color: inherit; text-decoration: none; }
+    button { border: 0; background: 0; font: inherit; color: inherit; cursor: none; }
+    img { max-width: 100%; display: block; }
+    ::selection { background: var(--accent); color: white; }
+
+    /* ─── CUSTOM CURSOR ──────────────────────────────────────────────── */
+    .cursor {
+      position: fixed; top: 0; left: 0;
+      width: 8px; height: 8px;
+      background: var(--text);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transition: width 0.22s ease, height 0.22s ease, background 0.22s ease;
+      transform: translate(-50%, -50%);
+      mix-blend-mode: difference;
+    }
+    .cursor.lg { width: 56px; height: 56px; background: var(--accent); }
+
+
+    /* ─── TOP NAV ────────────────────────────────────────────────────── */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 18px 32px;
+      display: flex; justify-content: space-between; align-items: center;
+      mix-blend-mode: difference;
+    }
+    .nav .logo {
+      font-family: var(--tight);
+      font-weight: 800;
+      font-size: 16px;
+      letter-spacing: -0.01em;
+      color: white;
+      white-space: nowrap;
+    }
+    .nav .logo .dot { color: var(--accent); }
+    .nav .links {
+      display: flex; gap: 28px;
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: 0.05em;
+      color: white;
+    }
+    .nav .links a {
+      position: relative;
+      padding: 6px 0;
+    }
+    .nav .links a::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; width: 0; height: 1px;
+      background: white;
+      transition: width 0.3s ease;
+    }
+    .nav .links a:hover::after { width: 100%; }
+    .nav .links a .idx {
+      font-size: 10px;
+      color: var(--accent);
+      margin-right: 6px;
+      letter-spacing: 0.05em;
+      opacity: 0.85;
+    }
+    .nav .cta {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      padding: 10px 18px;
+      border: 1px solid white;
+      border-radius: 100px;
+      color: white;
+      transition: all 0.2s ease;
+    }
+    .nav .cta:hover { background: white; color: black; }
+
+    /* ════════════════════════════════════════════════════════════════
+       HERO REBUILD — HUD / BLUEPRINT
+       ════════════════════════════════════════════════════════════════ */
+    .hero {
+      position: relative;
+      height: 100vh;
+      min-height: 720px;
+      overflow: hidden;
+      padding: 0;
+      isolation: isolate;
+    }
+    #heroCanvas {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* corner brackets */
+    .hud-corner {
+      position: absolute;
+      width: 40px; height: 40px;
+      z-index: 5;
+      pointer-events: none;
+    }
+    .hud-corner svg { width: 100%; height: 100%; display: block; overflow: visible; }
+    .hud-corner svg path {
+      stroke: var(--text-3);
+      stroke-width: 1;
+      fill: none;
+      stroke-dasharray: 80;
+      stroke-dashoffset: 80;
+      animation: hudDraw 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+    }
+    @keyframes hudDraw { to { stroke-dashoffset: 0; } }
+    .hud-corner.tl { top: 20px; left: 20px; }
+    .hud-corner.tr { top: 20px; right: 20px; transform: scaleX(-1); }
+    .hud-corner.br { bottom: 20px; right: 20px; transform: scale(-1, -1); }
+    .hud-corner.bl { bottom: 20px; left: 20px; transform: scaleY(-1); }
+
+    /* HUD readouts */
+    .hud-readout {
+      position: absolute;
+      z-index: 5;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      line-height: 1.7;
+      pointer-events: none;
+      opacity: 0;
+      animation: hudFade 0.8s ease 1.0s forwards;
+    }
+    @keyframes hudFade { to { opacity: 1; } }
+    .hud-readout b { color: var(--text-2); font-weight: 500; }
+    .hud-readout em { color: var(--accent); font-style: normal; }
+    .hud-readout .row { display: block; }
+    .hud-readout.tl { top: 80px; left: 32px; }
+    .hud-readout.tr { top: 80px; right: 32px; text-align: right; }
+    .hud-readout.bl { bottom: 32px; left: 32px; }
+    .hud-readout.br { bottom: 32px; right: 32px; text-align: right; font-variant-numeric: tabular-nums; }
+
+    /* annotation markers */
+    .annot {
+      position: absolute;
+      z-index: 4;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      animation: hudFade 0.6s ease forwards;
+    }
+    .annot .ln { width: 32px; height: 1px; background: var(--accent); }
+    .annot .num { color: var(--accent); font-weight: 500; }
+    .annot .lbl { color: var(--text-2); }
+
+    /* main name */
+    .hero-stack {
+      position: absolute;
+      left: 32px;
+      top: 50%;
+      transform: translateY(-58%);
+      z-index: 3;
+      pointer-events: none;
+    }
+    .hero-stack .nm {
+      display: block;
+      font-family: var(--tight);
+      font-weight: 800;
+      font-size: clamp(80px, 17vw, 280px);
+      line-height: 0.84;
+      letter-spacing: -0.06em;
+      color: var(--text);
+      white-space: nowrap;
+    }
+    .hero-stack .nm .char {
+      display: inline-block;
+      will-change: transform, opacity, filter;
+      pointer-events: auto;
+    }
+    .hero-stack .nm.outline {
+      color: transparent;
+      -webkit-text-stroke: 1.5px var(--text);
+      -webkit-text-fill-color: transparent;
+      font-style: italic;
+      font-weight: 500;
+      transform: translateX(0.45em);
+      margin-top: -0.04em;
+    }
+    .hero-stack .nm .char:hover {
+      color: var(--accent);
+      -webkit-text-fill-color: var(--accent);
+      transform: translateY(-6px) scale(1.04);
+      transition: transform 0.3s var(--ease), color 0.3s ease, -webkit-text-fill-color 0.3s ease;
+    }
+
+    /* cycler row */
+    .hero-cycler-row {
+      position: absolute;
+      left: 32px;
+      bottom: 200px;
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      z-index: 4;
+      pointer-events: none;
+    }
+    .hero-cycler-row .br {
+      font-family: var(--mono);
+      font-size: clamp(20px, 2.8vw, 32px);
+      color: var(--accent);
+      font-weight: 400;
+    }
+    .hero-cycler-wrap {
+      position: relative;
+      display: inline-block;
+      font-family: var(--tight);
+      font-weight: 500;
+      font-style: italic;
+      font-size: clamp(28px, 4vw, 56px);
+      letter-spacing: -0.02em;
+      color: var(--text);
+      white-space: nowrap;
+    }
+    .hero-cycler-wrap .layer {
+      display: inline-block;
+    }
+    .hero-cycler-wrap .glitch-r,
+    .hero-cycler-wrap .glitch-g {
+      position: absolute;
+      left: 0; top: 0;
+      pointer-events: none;
+      mix-blend-mode: screen;
+      opacity: 0;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+    .hero-cycler-wrap .glitch-r { color: #ff5230; }
+    .hero-cycler-wrap .glitch-g { color: #62ff7a; }
+    .hero-cycler-wrap.glitching .glitch-r { opacity: 0.85; transform: translateX(-3px); }
+    .hero-cycler-wrap.glitching .glitch-g { opacity: 0.85; transform: translateX(3px); }
+
+    /* meta row — restyled */
+    .hero-meta {
+      position: absolute;
+      left: 32px;
+      right: 32px;
+      bottom: 64px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 48px;
+      z-index: 4;
+      border-top: 1px solid var(--line);
+      padding-top: 18px;
+      max-width: 720px;
+    }
+    .hero-meta .col { display: flex; flex-direction: column; gap: 4px; }
+    .hero-meta .col .k {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-3);
+    }
+    .hero-meta .col .k em { color: var(--accent); font-style: normal; }
+    .hero-meta .col .v {
+      font-family: var(--tight);
+      font-size: 15px;
+      color: var(--text);
+      letter-spacing: -0.01em;
+      font-weight: 500;
+    }
+    .hero-meta .col .v b { font-weight: 700; }
+    .hero-meta .col .v .dot { color: var(--green); }
+
+    /* 3D wireframe widget */
+    .hero-widget {
+      position: absolute;
+      right: 64px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 280px;
+      height: 280px;
+      z-index: 3;
+      pointer-events: auto;
+      cursor: grab;
+    }
+    .hero-widget.grabbing { cursor: grabbing; }
+    #widgetCanvas { width: 100%; height: 100%; display: block; }
+    .hero-widget-label {
+      position: absolute;
+      top: -32px; left: 0;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    .hero-widget-label b { color: var(--accent); margin-right: 8px; }
+    .hero-widget-label .blink {
+      display: inline-block;
+      width: 6px; height: 6px;
+      background: var(--green);
+      border-radius: 50%;
+      margin-left: 8px;
+      vertical-align: middle;
+      animation: widgetBlink 1.4s ease-in-out infinite;
+    }
+    @keyframes widgetBlink {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+
+    /* scroll prompt — restyled */
+    .scroll-prompt-new {
+      position: absolute;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.35em;
+      color: var(--text-3);
+      z-index: 4;
+      pointer-events: none;
+      text-align: center;
+    }
+    .scroll-prompt-new::after {
+      content: '';
+      display: block;
+      width: 1px; height: 22px;
+      background: var(--accent);
+      margin: 6px auto 0;
+      transform-origin: top;
+      animation: scrollLine 1.6s cubic-bezier(0.7, 0, 0.3, 1) infinite;
+    }
+    @keyframes scrollLine {
+      0%   { transform: scaleY(0); transform-origin: top; }
+      40%  { transform: scaleY(1); transform-origin: top; }
+      60%  { transform: scaleY(1); transform-origin: bottom; }
+      100% { transform: scaleY(0); transform-origin: bottom; }
+    }
+
+    /* responsive — kill widget + scale type */
+    @media (max-width: 1100px) {
+      .hero-widget { display: none; }
+      .annot { display: none; }
+      .hero-stack { left: 24px; }
+    }
+    @media (max-width: 900px) {
+      .hud-readout.tl, .hud-readout.tr { display: none; }
+      .hud-readout.bl, .hud-readout.br { font-size: 9px; }
+      .hero-meta { grid-template-columns: repeat(2, 1fr); gap: 16px; bottom: 50px; max-width: none; }
+      .hero-cycler-row { bottom: 220px; left: 24px; }
+      .hero-stack .nm { font-size: clamp(56px, 18vw, 120px); }
+    }
+
+    /* ─── INTRO MARQUEE ──────────────────────────────────────────────── */
+    .marquee-strip {
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      overflow: hidden;
+      padding: 24px 0;
+    }
+    .marquee {
+      display: flex;
+      gap: 48px;
+      animation: scroll-x 38s linear infinite;
+      width: max-content;
+    }
+    .marquee .item {
+      display: flex; align-items: center; gap: 48px;
+      font-family: var(--tight);
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+    }
+    .marquee .item .star { color: var(--accent); font-size: 12px; }
+    @keyframes scroll-x { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+    /* ─── ABOUT ──────────────────────────────────────────────────────── */
+    .about {
+      padding: 160px 32px 120px;
+      max-width: 1280px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 80px;
+      border-top: none;
+    }
+    .section-eyebrow {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--text-3);
+    }
+    .section-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .section-eyebrow::before {
+      content: '';
+      display: inline-block;
+      width: 28px;
+      height: 1px;
+      background: var(--accent);
+    }
+    .about-prose {
+      font-family: var(--tight);
+      font-size: clamp(28px, 3.2vw, 44px);
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+      font-weight: 400;
+      color: var(--text);
+    }
+    .about-prose b { font-weight: 600; color: var(--text); }
+    .about-prose em {
+      font-style: normal;
+      color: var(--accent);
+      font-weight: 500;
+    }
+    .about-prose .strike { color: var(--text-3); text-decoration: line-through; }
+
+    /* ─── ACHIEVEMENT STACK ──────────────────────────────────────────── */
+    .stack {
+      padding: 0 0 120px;
+      overflow: hidden;
+    }
+    .stack-rail {
+      display: flex;
+      gap: 1px;
+      background: var(--line);
+      animation: scroll-x 50s linear infinite;
+      width: max-content;
+    }
+    .stack-card {
+      background: var(--bg);
+      padding: 36px 40px;
+      min-width: 360px;
+      display: flex; flex-direction: column;
+      gap: 16px;
+    }
+    .stack-card .num {
+      font-family: var(--tight);
+      font-size: 88px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+    .stack-card .num small {
+      font-size: 32px;
+      font-weight: 500;
+      color: var(--text-3);
+      vertical-align: top;
+      margin-left: 4px;
+    }
+    .stack-card .lbl {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-3);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+    .stack-card .desc {
+      font-family: var(--tight);
+      font-size: 15px;
+      color: var(--text-2);
+      line-height: 1.4;
+    }
+    .stack-card.accent .num { color: var(--accent); }
+    .stack-card.green .num { color: var(--green); }
+
+    /* ─── CASES ──────────────────────────────────────────────────────── */
+    .cases {
+      padding: 80px 32px 120px;
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+    .cases-head {
+      display: flex; justify-content: space-between; align-items: end;
+      margin-bottom: 48px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--line);
+    }
+    .cases-head .title {
+      font-family: var(--tight);
+      font-weight: 800;
+      font-size: clamp(40px, 6vw, 88px);
+      letter-spacing: -0.04em;
+      line-height: 0.95;
+    }
+    .cases-head .title em {
+      font-style: italic; font-weight: 400;
+      color: var(--text-3);
+    }
+    .cases-head .meta {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-3);
+      letter-spacing: 0.15em;
+      text-align: right;
+    }
+    .cases-head .meta b { color: var(--accent); }
+
+    .cases-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+    .case {
+      position: relative;
+      aspect-ratio: 16 / 11;
+      overflow: hidden;
+      cursor: none;
+      border-radius: 8px;
+    }
+    .case::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.85) 100%);
+      pointer-events: none;
+      z-index: 2;
+    }
+    .case-bg {
+      position: absolute; inset: 0;
+      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .case:hover .case-bg { transform: scale(1.05); }
+    .case-content {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 32px;
+      z-index: 3;
+      display: flex; justify-content: space-between; align-items: end;
+    }
+    .case-info { display: flex; flex-direction: column; gap: 6px; }
+    .case-info .name {
+      font-family: var(--tight);
+      font-size: clamp(28px, 3.5vw, 48px);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+    .case-info .role {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-2);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+    .case-tag {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: var(--text);
+      padding: 6px 12px;
+      border: 1px solid rgba(255,255,255,0.4);
+      border-radius: 100px;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+    .case-tag.live { border-color: var(--green); color: var(--green); }
+    .case-num {
+      position: absolute; top: 24px; left: 24px;
+      z-index: 3;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: rgba(255,255,255,0.7);
+      letter-spacing: 0.15em;
+    }
+    .case .arrow {
+      position: absolute; top: 24px; right: 24px;
+      z-index: 3;
+      font-family: var(--mono);
+      font-size: 16px;
+      color: rgba(255,255,255,0.7);
+      transition: transform 0.3s ease;
+    }
+    .case:hover .arrow { transform: translate(4px, -4px); }
+
+    /* Project visual backgrounds — fake screenshots via gradients */
+    .case-d4nce .case-bg {
+      background:
+        radial-gradient(ellipse at 30% 60%, #ff00aa, transparent 60%),
+        radial-gradient(ellipse at 80% 30%, #00ddff, transparent 60%),
+        linear-gradient(135deg, #1a0033, #0a0a1a);
+    }
+    .case-d4nce .case-bg::before {
+      content: '';
+      position: absolute; inset: 30% 0;
+      background:
+        repeating-linear-gradient(90deg, rgba(255,0,170,0.7) 0 2px, transparent 2px 6px),
+        repeating-linear-gradient(90deg, rgba(0,221,255,0.5) 0 1px, transparent 1px 8px);
+      mask-image: linear-gradient(180deg, transparent, white 30%, white 70%, transparent);
+    }
+    .case-v3rsus .case-bg {
+      background:
+        radial-gradient(circle at 70% 40%, rgba(255, 90, 50, 0.6), transparent 60%),
+        linear-gradient(135deg, #2a0500, #0a0a0a);
+    }
+    .case-v3rsus .case-bg::before {
+      content: '';
+      position: absolute; inset: 30% 24px 40% 24px;
+      background-image: linear-gradient(to top,
+        rgba(255, 80, 50, 0.85) 0,
+        rgba(255, 80, 50, 0.85) 70%,
+        transparent 70%);
+      background-size: 12% 100%;
+      background-repeat: repeat-x;
+      mask-image: linear-gradient(to top, white 0%, white 60%, transparent 100%);
+      filter: blur(0.3px);
+    }
+    .case-r1ver .case-bg {
+      background:
+        radial-gradient(ellipse at 50% 70%, #1a4d2e, #000 70%),
+        linear-gradient(180deg, #0a1a12, #000);
+    }
+    .case-r1ver .case-bg::before {
+      content: '├─ AsKK · 0.72\A│  ├─ raise · 0.68\A│  └─ call  · 0.32\A├─ AdKd · 0.71\A│  ├─ raise · 0.65\A│  └─ fold  · 0.21\A└─ QQ   · 0.61';
+      white-space: pre;
+      position: absolute;
+      top: 30%; left: 32px;
+      font-family: var(--mono);
+      font-size: 13px;
+      color: rgba(98, 255, 122, 0.75);
+      line-height: 1.7;
+    }
+    .case-harboros .case-bg {
+      background: radial-gradient(ellipse at 50% 60%, #001a35, #000 80%);
+    }
+    .case-harboros .case-bg::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 280px; height: 280px;
+      border: 1px solid rgba(100, 200, 255, 0.4);
+      border-radius: 50%;
+      background:
+        radial-gradient(circle, transparent 60%, rgba(100, 200, 255, 0.06) 70%, transparent 71%),
+        repeating-radial-gradient(circle, transparent 0 28px, rgba(100, 200, 255, 0.18) 28px 29px);
+    }
+    .case-harboros .case-bg::after {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 280px; height: 280px;
+      background: conic-gradient(from 30deg, transparent 70%, rgba(98, 255, 122, 0.4));
+      border-radius: 50%;
+    }
+    .case-str1ke .case-bg {
+      background:
+        radial-gradient(ellipse at 30% 40%, rgba(255, 51, 102, 0.4), transparent 60%),
+        linear-gradient(135deg, #1a0008, #050505);
+    }
+    .case-str1ke .case-bg::before {
+      content: '';
+      position: absolute;
+      top: 30%; left: 32px; right: 32px; bottom: 35%;
+      border: 1.5px solid var(--accent);
+      box-shadow: inset 0 0 0 1px rgba(255, 82, 48, 0.3);
+    }
+    .case-str1ke .case-bg::after {
+      content: 'STRIKE · 0.94';
+      position: absolute;
+      top: calc(30% - 22px); left: 32px;
+      background: var(--accent);
+      color: white;
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 3px 8px;
+      letter-spacing: 0.05em;
+    }
+    .case-dr4ft .case-bg {
+      background: linear-gradient(135deg, #0a1430, #000);
+    }
+    .case-dr4ft .case-bg::before {
+      content: '';
+      position: absolute;
+      top: 25%; left: 40px; right: 40px; bottom: 35%;
+      background: white;
+      transform: rotate(-2deg);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+      background-image: repeating-linear-gradient(
+        180deg,
+        transparent 0 16px,
+        rgba(0,0,0,0.85) 16px 19px,
+        transparent 19px 28px,
+        rgba(255, 82, 48, 0.4) 28px 31px,
+        transparent 31px 44px,
+        rgba(0,0,0,0.85) 44px 47px,
+        transparent 47px 60px,
+        rgba(0,0,0,0.85) 60px 63px,
+        transparent 63px 76px
+      );
+    }
+
+    /* ─── EXPERIENCE LIST ────────────────────────────────────────────── */
+    .experience {
+      padding: 60px 32px 120px;
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+    .exp-row {
+      display: grid;
+      grid-template-columns: 100px 1fr 2fr 120px;
+      gap: 32px;
+      padding: 32px 0;
+      border-top: 1px solid var(--line);
+      align-items: center;
+      transition: background 0.2s ease, padding 0.3s ease;
+      cursor: none;
+    }
+    .exp-row:last-child { border-bottom: 1px solid var(--line); }
+    .exp-row:hover {
+      background: linear-gradient(90deg, rgba(255, 82, 48, 0.04), transparent 70%);
+      padding-left: 16px;
+    }
+    .exp-year {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--text-3);
+      letter-spacing: 0.1em;
+    }
+    .exp-org {
+      font-family: var(--tight);
+      font-size: clamp(22px, 2.4vw, 32px);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .exp-role {
+      font-family: var(--sans);
+      font-size: 14px;
+      color: var(--text-2);
+      line-height: 1.5;
+    }
+    .exp-arrow {
+      font-family: var(--mono);
+      font-size: 14px;
+      color: var(--text-3);
+      text-align: right;
+      transition: transform 0.2s ease, color 0.2s ease;
+    }
+    .exp-row:hover .exp-arrow { transform: translateX(6px); color: var(--accent); }
+
+    /* ─── CONTACT ────────────────────────────────────────────────────── */
+    .contact {
+      padding: 120px 32px 80px;
+      max-width: 1280px;
+      margin: 0 auto;
+      text-align: center;
+      border-top: 1px solid var(--line);
+    }
+    .contact .eyebrow {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: 24px;
+    }
+    .contact .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      justify-content: center;
+    }
+    .contact .eyebrow::before {
+      content: '';
+      display: inline-block;
+      width: 28px;
+      height: 1px;
+      background: var(--accent);
+    }
+    .contact h2 {
+      font-family: var(--tight);
+      font-weight: 800;
+      font-size: clamp(64px, 12vw, 196px);
+      letter-spacing: -0.05em;
+      line-height: 0.9;
+      margin-bottom: 48px;
+    }
+    .contact h2 em {
+      font-style: italic; font-weight: 400;
+      color: var(--accent);
+    }
+    .contact-buttons {
+      display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+      margin-bottom: 48px;
+    }
+    .contact-btn {
+      padding: 18px 36px;
+      border: 1px solid var(--text);
+      border-radius: 100px;
+      font-family: var(--mono);
+      font-size: 13px;
+      letter-spacing: 0.1em;
+      transition: all 0.2s ease;
+      cursor: none;
+    }
+    .contact-btn:hover {
+      background: var(--text);
+      color: var(--bg);
+    }
+    .contact-btn.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+    .contact-btn.primary:hover {
+      background: white;
+      border-color: white;
+      color: black;
+    }
+    .contact-email {
+      font-family: var(--tight);
+      font-size: clamp(20px, 2.4vw, 32px);
+      font-weight: 500;
+      color: var(--text-2);
+      letter-spacing: -0.02em;
+      cursor: none;
+    }
+    .contact-email:hover { color: var(--accent); }
+
+    /* ─── FOOTER ─────────────────────────────────────────────────────── */
+    .footer {
+      padding: 64px 32px 48px;
+      border-top: 1px solid var(--line);
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+    .footer-rows {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 32px;
+      margin-bottom: 48px;
+    }
+    .footer-block .h {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: 16px;
+    }
+    .footer-block .row {
+      font-family: var(--tight);
+      font-size: 16px;
+      color: var(--text-2);
+      padding: 6px 0;
+    }
+    .footer-block .row a:hover { color: var(--accent); }
+    .footer-bottom {
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+      display: flex; justify-content: space-between;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-3);
+      letter-spacing: 0.05em;
+    }
+
+    /* ─── REVEAL ANIM ────────────────────────────────────────────────── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal.in { opacity: 1; transform: translateY(0); }
+
+    /* ─── RESPONSIVE ─────────────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      html, body { cursor: auto; }
+      .cursor { display: none; }
+      a, button, .case, .exp-row, .contact-email, .contact-btn { cursor: pointer; }
+      .nav { padding: 14px 16px; }
+      .nav .links { display: none; }
+      .hero { padding: 100px 16px 16px; }
+      .hero-foot { grid-template-columns: 1fr; gap: 16px; }
+      .about { grid-template-columns: 1fr; gap: 24px; padding: 80px 16px; }
+      .cases-grid { grid-template-columns: 1fr; }
+      .cases { padding: 60px 16px 80px; }
+      .experience { padding: 40px 16px 80px; }
+      .exp-row { grid-template-columns: 1fr; gap: 8px; padding: 24px 0; }
+      .contact { padding: 80px 16px 60px; }
+      .footer { padding: 40px 16px 32px; }
+      .footer-rows { grid-template-columns: 1fr 1fr; }
+      .scroll-prompt { display: none; }
+      .stack-card { min-width: 260px; padding: 24px; }
+      .stack-card .num { font-size: 56px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+
+<!-- ─── NAV ─────────────────────────────────────────────────────────── -->
+<nav class="nav">
+  <a href="#" class="logo">Thomas Ou<span class="dot">.</span></a>
+  <div class="links">
+    <a href="#work" data-cursor><span class="idx">/01</span> Folio</a>
+    <a href="#about" data-cursor><span class="idx">/02</span> Info</a>
+    <a href="#experience" data-cursor><span class="idx">/03</span> Exp</a>
+    <a href="#contact" data-cursor><span class="idx">/04</span> Contact</a>
+  </div>
+  <a href="mailto:thomasou@sas.upenn.edu" class="cta" data-cursor>Let's talk →</a>
+</nav>
+
+<!-- ─── HERO ────────────────────────────────────────────────────────── -->
+<section class="hero" id="hero">
+  <canvas id="heroCanvas"></canvas>
+
+  <!-- HUD: minimal—clock + location only -->
+  <div class="hud-readout tr">
+    <span class="row"><b>Philadelphia</b></span>
+    <span class="row" id="hudClock">--:--</span>
+  </div>
+
+  <!-- name stack -->
+  <div class="hero-stack">
+    <span class="nm solid" data-name>Thomas</span>
+    <span class="nm outline" data-name>Ou</span>
+  </div>
+
+  <!-- cycler -->
+  <div class="hero-cycler-row">
+    <span class="br">[</span>
+    <span class="hero-cycler-wrap" id="cyclerWrap">
+      <span class="layer base" id="cyclerBase">Software Engineer</span>
+      <span class="layer glitch-r" id="cyclerR">Software Engineer</span>
+      <span class="layer glitch-g" id="cyclerG">Software Engineer</span>
+    </span>
+    <span class="br">]</span>
+  </div>
+
+  <!-- meta -->
+  <div class="hero-meta">
+    <div class="col"><span class="k">Currently</span><span class="v"><b>Amazon FSx</b> · SWE</span></div>
+    <div class="col"><span class="k">Studying</span><span class="v"><b>UPenn</b> · Math + CS</span></div>
+    <div class="col"><span class="k">Available</span><span class="v">2027 · new grad '28</span></div>
+  </div>
+
+  <!-- 3D widget -->
+  <div class="hero-widget" id="heroWidget">
+    <canvas id="widgetCanvas"></canvas>
+  </div>
+
+  <div class="scroll-prompt-new">SCROLL</div>
+</section>
+
+<!-- ─── MARQUEE ─────────────────────────────────────────────────────── -->
+<div class="marquee-strip">
+  <div class="marquee">
+    <div class="item">Six shipped products <span class="star">★</span></div>
+    <div class="item">50ms arbitrage engine <span class="star">★</span></div>
+    <div class="item">50,000 pages OCR'd <span class="star">★</span></div>
+    <div class="item">Monte Carlo on SIMD <span class="star">★</span></div>
+    <div class="item">Counterfactual regret minimization <span class="star">★</span></div>
+    <div class="item">Maritime defense systems <span class="star">★</span></div>
+    <!-- duplicate for seamless loop -->
+    <div class="item">Six shipped products <span class="star">★</span></div>
+    <div class="item">50ms arbitrage engine <span class="star">★</span></div>
+    <div class="item">50,000 pages OCR'd <span class="star">★</span></div>
+    <div class="item">Monte Carlo on SIMD <span class="star">★</span></div>
+    <div class="item">Counterfactual regret minimization <span class="star">★</span></div>
+    <div class="item">Maritime defense systems <span class="star">★</span></div>
+  </div>
+</div>
+
+<!-- ─── ABOUT ──────────────────────────────────────────────────────── -->
+<section class="about" id="about">
+  <div>
+    <span class="section-eyebrow">(_Info)</span>
+  </div>
+  <div class="about-prose reveal">
+    I'm Thomas, a math and computer science student at the <b>University of Pennsylvania</b>. I build systems that operate on <em>uncertainty and adversaries</em> — poker solvers, prediction markets, plasma physics, computer vision on fight footage, maritime threat detection. <span class="strike">Thought I'd be a quant.</span> Turns out I just like edges. Currently shipping control-plane infrastructure on <b>AWS FSx</b>, available for 2027 summer roles and new grad '28.
+  </div>
+</section>
+
+<!-- ─── ACHIEVEMENT STACK ──────────────────────────────────────────── -->
+<div class="stack">
+  <div class="stack-rail">
+    <div class="stack-card accent">
+      <div class="num">50<small>MS</small></div>
+      <div class="lbl">Detection latency</div>
+      <div class="desc">Cross-platform arbitrage engine at Astera Holdings, prediction markets.</div>
+    </div>
+    <div class="stack-card green">
+      <div class="num">50<small>K</small></div>
+      <div class="lbl">Pages digitized</div>
+      <div class="desc">CV + NLP pipeline on historical defense records at Penn CURF.</div>
+    </div>
+    <div class="stack-card">
+      <div class="num">2.3<small>M</small></div>
+      <div class="lbl">MCCFR iterations</div>
+      <div class="desc">R1VER poker solver, GTO convergence on simplified hold'em.</div>
+    </div>
+    <div class="stack-card accent">
+      <div class="num">6<small> shipped</small></div>
+      <div class="lbl">Production products</div>
+      <div class="desc">From AI DJ to maritime defense — see Selected Work below.</div>
+    </div>
+    <div class="stack-card green">
+      <div class="num">18<small> y/o</small></div>
+      <div class="lbl">Casino exploit</div>
+      <div class="desc">Found a vulnerability in a crypto casino's shuffler. Got hired to fix it.</div>
+    </div>
+    <!-- duplicate for loop -->
+    <div class="stack-card accent">
+      <div class="num">50<small>MS</small></div>
+      <div class="lbl">Detection latency</div>
+      <div class="desc">Cross-platform arbitrage engine at Astera Holdings, prediction markets.</div>
+    </div>
+    <div class="stack-card green">
+      <div class="num">50<small>K</small></div>
+      <div class="lbl">Pages digitized</div>
+      <div class="desc">CV + NLP pipeline on historical defense records at Penn CURF.</div>
+    </div>
+    <div class="stack-card">
+      <div class="num">2.3<small>M</small></div>
+      <div class="lbl">MCCFR iterations</div>
+      <div class="desc">R1VER poker solver, GTO convergence on simplified hold'em.</div>
+    </div>
+    <div class="stack-card accent">
+      <div class="num">6<small> shipped</small></div>
+      <div class="lbl">Production products</div>
+      <div class="desc">From AI DJ to maritime defense — see Selected Work below.</div>
+    </div>
+    <div class="stack-card green">
+      <div class="num">18<small> y/o</small></div>
+      <div class="lbl">Casino exploit</div>
+      <div class="desc">Found a vulnerability in a crypto casino's shuffler. Got hired to fix it.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── CASES ───────────────────────────────────────────────────────── -->
+<section class="cases" id="work">
+  <div class="cases-head">
+    <h2 class="title">(_Folio)<br/><em>selected work</em></h2>
+    <div class="meta">
+      <b>06</b> projects shipped<br/>
+      2024 — 2026
+    </div>
+  </div>
+
+  <div class="cases-grid">
+    <a class="case case-d4nce" data-cursor>
+      <div class="case-bg"></div>
+      <div class="case-num">01 / 06</div>
+      <div class="arrow">↗</div>
+      <div class="case-content">
+        <div class="case-info">
+          <div class="name">© D4NCE</div>
+          <div class="role">LLM-driven DJ system · 2025</div>
+        </div>
+        <div class="case-tag">Audio · LLM</div>
+      </div>
+    </a>
+
+    <a class="case case-v3rsus" data-cursor>
+      <div class="case-bg"></div>
+      <div class="case-num">02 / 06</div>
+      <div class="arrow">↗</div>
+      <div class="case-content">
+        <div class="case-info">
+          <div class="name">© V3RSUS</div>
+          <div class="role">MMA fight prediction · 2025</div>
+        </div>
+        <div class="case-tag">ML · Sports</div>
+      </div>
+    </a>
+
+    <a class="case case-r1ver" data-cursor>
+      <div class="case-bg"></div>
+      <div class="case-num">03 / 06</div>
+      <div class="arrow">↗</div>
+      <div class="case-content">
+        <div class="case-info">
+          <div class="name">© R1VER</div>
+          <div class="role">Poker MCCFR solver · 2024</div>
+        </div>
+        <div class="case-tag live">▮ Live demo</div>
+      </div>
+    </a>
+
+    <a class="case case-harboros" data-cursor>
+      <div class="case-bg"></div>
+      <div class="case-num">04 / 06</div>
+      <div class="arrow">↗</div>
+      <div class="case-content">
+        <div class="case-info">
+          <div class="name">© HARBOROS</div>
+          <div class="role">Maritime defense platform · 2026</div>
+        </div>
+        <div class="case-tag">Defense · Realtime</div>
+      </div>
+    </a>
+
+    <a class="case case-str1ke" data-cursor>
+      <div class="case-bg"></div>
+      <div class="case-num">05 / 06</div>
+      <div class="arrow">↗</div>
+      <div class="case-content">
+        <div class="case-info">
+          <div class="name">© STR1KE</div>
+          <div class="role">Strike detection (CV) · 2025</div>
+        </div>
+        <div class="case-tag">CV · Sports</div>
+      </div>
+    </a>
+
+    <a class="case case-dr4ft" data-cursor>
+      <div class="case-bg"></div>
+      <div class="case-num">06 / 06</div>
+      <div class="arrow">↗</div>
+      <div class="case-content">
+        <div class="case-info">
+          <div class="name">© DR4FT</div>
+          <div class="role">AI resume optimizer · 2024</div>
+        </div>
+        <div class="case-tag">LLM · Tools</div>
+      </div>
+    </a>
+  </div>
+</section>
+
+<!-- ─── EXPERIENCE LIST ────────────────────────────────────────────── -->
+<section class="experience" id="experience">
+  <div class="cases-head" style="margin-bottom: 32px;">
+    <h2 class="title">(_Experience)<br/><em>where I've shipped</em></h2>
+    <div class="meta">
+      <b>2024 →</b><br/>present
+    </div>
+  </div>
+
+  <div class="exp-row" data-cursor>
+    <span class="exp-year">/01 · 2026</span>
+    <span class="exp-org">Amazon</span>
+    <span class="exp-role">Software engineer · FSx control plane · petabyte-scale managed file systems</span>
+    <span class="exp-arrow">SWE →</span>
+  </div>
+  <div class="exp-row" data-cursor>
+    <span class="exp-year">/02 · 2025</span>
+    <span class="exp-org">Astera Holdings</span>
+    <span class="exp-role">Quantitative developer · 50ms cross-platform arbitrage engine on prediction markets</span>
+    <span class="exp-arrow">QUANT →</span>
+  </div>
+  <div class="exp-row" data-cursor>
+    <span class="exp-year">/03 · 2025</span>
+    <span class="exp-org">Penn CURF</span>
+    <span class="exp-role">Research assistant · CV + NLP pipeline digitizing 50,000 pages of historical defense records</span>
+    <span class="exp-arrow">RESEARCH →</span>
+  </div>
+  <div class="exp-row" data-cursor>
+    <span class="exp-year">/04 · 2024</span>
+    <span class="exp-org">Princeton Plasma Physics Lab</span>
+    <span class="exp-role">Research assistant · Monte Carlo plasma simulations, SIMD vectorization for 8x speedup</span>
+    <span class="exp-arrow">RESEARCH →</span>
+  </div>
+  <div class="exp-row" data-cursor>
+    <span class="exp-year">/05 · 2024</span>
+    <span class="exp-org">Flushing CPA Tax Center</span>
+    <span class="exp-role">Data engineer · Automation scripts + predictive models for corporate tax advisory</span>
+    <span class="exp-arrow">DATA →</span>
+  </div>
+</section>
+
+<!-- ─── CONTACT ─────────────────────────────────────────────────────── -->
+<section class="contact" id="contact">
+  <div class="eyebrow">(_Contact)</div>
+  <h2>Let's<br/><em>build</em></h2>
+  <div class="contact-buttons">
+    <a class="contact-btn primary" href="mailto:thomasou@sas.upenn.edu" data-cursor>Email me →</a>
+    <a class="contact-btn" href="#" data-cursor>LinkedIn</a>
+    <a class="contact-btn" href="#" data-cursor>GitHub</a>
+    <a class="contact-btn" href="#" data-cursor>Resume on request</a>
+  </div>
+  <a class="contact-email" href="mailto:thomasou@sas.upenn.edu" data-cursor>thomasou@sas.upenn.edu ↗</a>
+</section>
+
+<!-- ─── FOOTER ──────────────────────────────────────────────────────── -->
+<footer class="footer">
+  <div class="footer-rows">
+    <div class="footer-block">
+      <div class="h">Currently</div>
+      <div class="row">Amazon FSx · SWE · Seattle</div>
+      <div class="row" style="color: var(--text-3); font-size: 13px;">May → Sept 2026</div>
+    </div>
+    <div class="footer-block">
+      <div class="h">Find me</div>
+      <div class="row"><a href="mailto:thomasou@sas.upenn.edu" data-cursor>Email</a></div>
+      <div class="row"><a href="#" data-cursor>GitHub</a></div>
+      <div class="row"><a href="#" data-cursor>LinkedIn</a></div>
+    </div>
+    <div class="footer-block">
+      <div class="h">Sitemap</div>
+      <div class="row"><a href="#about" data-cursor>About</a></div>
+      <div class="row"><a href="#work" data-cursor>Work</a></div>
+      <div class="row"><a href="#experience" data-cursor>Experience</a></div>
+      <div class="row"><a href="#contact" data-cursor>Contact</a></div>
+    </div>
+    <div class="footer-block">
+      <div class="h">Off-screen</div>
+      <div class="row" style="color: var(--text-3); font-size: 13px;">Penn Boxing</div>
+      <div class="row" style="color: var(--text-3); font-size: 13px;">Lifting</div>
+      <div class="row" style="color: var(--text-3); font-size: 13px;">Online poker</div>
+      <div class="row" style="color: var(--text-3); font-size: 13px;">Good music</div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 Thomas Ou · ThomasOu V1.0 · All Rights Reserved</span>
+    <span>Philadelphia · EST · <span id="footerClock">—:—</span></span>
+  </div>
+</footer>
+
+<script>
+  // ─── CUSTOM CURSOR ─────────────────────────────────────────────────
+  const cursor = document.getElementById('cursor');
+  let mx = 0, my = 0, cx = 0, cy = 0;
+  document.addEventListener('mousemove', (e) => { mx = e.clientX; my = e.clientY; });
+  function tick() {
+    cx += (mx - cx) * 0.18;
+    cy += (my - cy) * 0.18;
+    cursor.style.transform = `translate(${cx}px, ${cy}px) translate(-50%, -50%)`;
+    requestAnimationFrame(tick);
+  }
+  tick();
+
+  document.querySelectorAll('[data-cursor]').forEach(el => {
+    el.addEventListener('mouseenter', () => cursor.classList.add('lg'));
+    el.addEventListener('mouseleave', () => cursor.classList.remove('lg'));
+  });
+
+  // ─── REVEAL ON SCROLL ──────────────────────────────────────────────
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // ─── HERO CYCLER — scramble + RGB glitch ────────────────────────────
+  (function() {
+    const wrap = document.getElementById('cyclerWrap');
+    const base = document.getElementById('cyclerBase');
+    const lr   = document.getElementById('cyclerR');
+    const lg   = document.getElementById('cyclerG');
+    if (!wrap || !base) return;
+
+    const WORDS = ['Software Engineer', 'Quant Researcher', 'Systems Builder', 'Edge Operator', 'GTO Solver', 'Poker Strategist'];
+    let idx = 0;
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!<>-_\\/[]{}—=+*?#';
+    const rg = () => GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+
+    const writeAll = s => { base.textContent = s; lr.textContent = s; lg.textContent = s; };
+
+    const scrambleTo = (target) => new Promise(resolve => {
+      const startLen = base.textContent.length;
+      const maxLen = Math.max(startLen, target.length);
+      const scrambleFrames = 18;
+      const lockStagger = 3;
+      const lockAt = [];
+      for (let i = 0; i < maxLen; i++) lockAt.push(scrambleFrames + i * lockStagger);
+      const totalFrames = (lockAt[lockAt.length - 1] || scrambleFrames) + 8;
+      let f = 0;
+      const tick = () => {
+        f++;
+        let s = '';
+        for (let i = 0; i < maxLen; i++) {
+          const tch = target[i] || '';
+          if (f >= lockAt[i]) s += tch;
+          else if (tch === ' ') s += ' ';
+          else if (i >= target.length) s += f > scrambleFrames + 4 ? '' : rg();
+          else s += rg();
+        }
+        writeAll(s);
+        if (f >= totalFrames) { writeAll(target); resolve(); return; }
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+
+    const triggerGlitch = async () => {
+      wrap.classList.add('glitching');
+      await sleep(220);
+      wrap.classList.remove('glitching');
+    };
+
+    writeAll('Software Engineer');
+    (async () => {
+      await sleep(1600);
+      while (true) {
+        idx = (idx + 1) % WORDS.length;
+        triggerGlitch();
+        await scrambleTo(WORDS[idx]);
+        await sleep(2200);
+      }
+    })();
+  })();
+</script>
+
+<script>
+  /* ════════════════════════════════════════════════════════════════════
+     HERO BLUEPRINT PIPELINE
+     ──────────────────────────────────────────────────────────────────
+     1. WebGL shader plane behind the type (custom FBM noise + cursor
+        ripple + scroll-velocity warp + RGB chromatic aberration)
+     2. Drag-rotate wireframe icosahedron widget (Three.js custom shader)
+     3. Letter-split name intro (GSAP timeline, char stagger)
+     4. Live HUD readouts (clock, mouse XY, scroll%, viewport, FPS)
+     5. Annotation reveal choreography
+     ════════════════════════════════════════════════════════════════════ */
+  (function() {
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const mobile = matchMedia('(max-width: 900px)').matches;
+    const hero = document.getElementById('hero');
+    if (!hero || !window.THREE) return;
+
+    /* ── 1. Letter-split name ───────────────────────────────────────── */
+    document.querySelectorAll('[data-name]').forEach(el => {
+      const text = el.textContent;
+      el.textContent = '';
+      [...text].forEach(c => {
+        const s = document.createElement('span');
+        s.className = 'char';
+        s.textContent = c === ' ' ? '\u00A0' : c;
+        el.appendChild(s);
+      });
+    });
+
+    if (!reduce) {
+      gsap.set('.hero-stack .nm .char', { yPercent: 110, opacity: 0, rotateZ: 6 });
+      gsap.set('.hero-cycler-row', { opacity: 0, y: 12 });
+      gsap.set('.hero-meta', { opacity: 0, y: 12 });
+      gsap.set('.scroll-prompt-new', { opacity: 0, y: 14 });
+
+      const tl = gsap.timeline({ delay: 0.2 });
+      tl.to('.hero-stack .nm .char', {
+        yPercent: 0, opacity: 1, rotateZ: 0,
+        duration: 1.3, stagger: 0.035, ease: 'expo.out'
+      }, 0)
+      .to('.hero-cycler-row', { opacity: 1, y: 0, duration: 0.8, ease: 'expo.out' }, 0.4)
+      .to('.hero-meta', { opacity: 1, y: 0, duration: 0.9, ease: 'expo.out' }, 0.7)
+      .to('.scroll-prompt-new', { opacity: 1, y: 0, duration: 0.8, ease: 'expo.out' }, 1.0);
+    }
+
+    /* ── 2. WebGL shader plane (FBM noise + ripple) ─────────────────── */
+    const canvas = document.getElementById('heroCanvas');
+    let renderer = null, scene = null, camera = null, planeMat = null;
+    try {
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      scene = new THREE.Scene();
+      camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
+      camera.position.z = 1;
+
+      const planeGeom = new THREE.PlaneGeometry(2, 2);
+      planeMat = new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      uniforms: {
+        uTime:       { value: 0 },
+        uMouse:      { value: new THREE.Vector2(99, 99) },
+        uMouseAct:   { value: 0 },
+        uScroll:     { value: 0 },
+        uScrollVel:  { value: 0 },
+        uAspect:     { value: 1 },
+        uAccent:     { value: new THREE.Color(0xff5230) },
+        uGreen:      { value: new THREE.Color(0x62ff7a) },
+        uBg:         { value: new THREE.Color(0x0a0a0a) },
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() { vUv = uv; gl_Position = vec4(position, 1.0); }
+      `,
+      fragmentShader: `
+        precision highp float;
+        varying vec2 vUv;
+        uniform float uTime;
+        uniform vec2  uMouse;
+        uniform float uMouseAct;
+        uniform float uScroll;
+        uniform float uScrollVel;
+        uniform float uAspect;
+        uniform vec3  uAccent;
+        uniform vec3  uGreen;
+        uniform vec3  uBg;
+
+        /* hash + value noise + FBM */
+        float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+        float vnoise(vec2 p) {
+          vec2 i = floor(p), f = fract(p);
+          float a = hash(i), b = hash(i + vec2(1.0, 0.0));
+          float c = hash(i + vec2(0.0, 1.0)), d = hash(i + vec2(1.0, 1.0));
+          vec2 u = f * f * (3.0 - 2.0 * f);
+          return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+        }
+        float fbm(vec2 p) {
+          float v = 0.0, amp = 0.5;
+          for (int i = 0; i < 5; i++) {
+            v += amp * vnoise(p);
+            p *= 2.02;
+            amp *= 0.5;
+          }
+          return v;
+        }
+
+        /* sample helper for chromatic aberration */
+        float fieldAt(vec2 uv) {
+          vec2 p = uv * 2.0 - 1.0;
+          p.x *= uAspect;
+
+          /* base FBM with slow drift + scroll-bound shear */
+          vec2 q = p * 1.2 + vec2(uTime * 0.05, -uTime * 0.03);
+          q.y += uScroll * 0.4 + uScrollVel * 0.6;
+          float n = fbm(q);
+
+          /* warped FBM with second octave */
+          vec2 r = q + vec2(fbm(q + 5.0), fbm(q + uTime * 0.1));
+          n = fbm(r);
+
+          /* cursor ripple */
+          vec2 m = uMouse; m.x *= uAspect;
+          float d = distance(p, m);
+          float ripple = exp(-d * 2.8) * uMouseAct;
+          float wave = sin(d * 18.0 - uTime * 4.0) * 0.5 * ripple;
+
+          return n + wave + ripple * 0.25;
+        }
+
+        void main() {
+          vec2 uv = vUv;
+
+          /* chromatic split — sample 3 offsets per channel */
+          float aberration = 0.004 + uScrollVel * 0.02;
+          float fr = fieldAt(uv + vec2(aberration, 0.0));
+          float fg = fieldAt(uv);
+          float fb = fieldAt(uv - vec2(aberration, 0.0));
+
+          /* contour bands — push into bg or into accent depending on level */
+          float band = smoothstep(0.42, 0.58, fg);
+          vec3 col = mix(uBg, mix(uAccent * 0.6, uGreen * 0.4, sin(uTime * 0.3) * 0.5 + 0.5), band * 0.18);
+
+          /* RGB drift adds the chromatic aberration */
+          col.r += (fr - fg) * 0.5;
+          col.b += (fb - fg) * 0.5;
+
+          /* vignette */
+          vec2 vc = uv - 0.5;
+          float vig = smoothstep(0.95, 0.35, dot(vc, vc) * 1.4);
+
+          /* scanline */
+          float scan = sin(uv.y * 1200.0) * 0.015;
+          col += scan;
+
+          /* dim overall so it sits behind text */
+          col *= 0.55 * vig;
+
+          /* output with low alpha so type stays dominant */
+          float alpha = 0.85 * vig;
+          gl_FragColor = vec4(col, alpha);
+        }
+      `,
+    });
+      scene.add(new THREE.Mesh(planeGeom, planeMat));
+    } catch (err) {
+      console.error('[hero] FBM shader pipeline failed:', err);
+      if (canvas) canvas.style.display = 'none';
+      renderer = null;
+    }
+
+    const setSize = () => {
+      if (!renderer || !planeMat) return;
+      const r = hero.getBoundingClientRect();
+      renderer.setSize(r.width, r.height, false);
+      planeMat.uniforms.uAspect.value = r.width / r.height;
+    };
+    setSize();
+    window.addEventListener('resize', setSize);
+
+    /* ── 3. Mouse + scroll state ────────────────────────────────────── */
+    const state = {
+      mx: 99, my: 99, tx: 99, ty: 99, mAct: 0, tAct: 0,
+      scroll: 0, lastScrollY: 0, scrollVel: 0, scrollVelTarget: 0,
+    };
+    window.addEventListener('mousemove', (e) => {
+      const r = hero.getBoundingClientRect();
+      if (e.clientY < r.bottom && e.clientY > r.top) {
+        state.tx = ((e.clientX - r.left) / r.width) * 2 - 1;
+        state.ty = -(((e.clientY - r.top) / r.height) * 2 - 1);
+        state.tAct = 1;
+      } else {
+        state.tAct = 0;
+      }
+    });
+    window.addEventListener('mouseout', () => { state.tAct = 0; });
+
+    /* ── 4. Wireframe widget — icosahedron with custom shader ──────── */
+    const wCanvas = document.getElementById('widgetCanvas');
+    const widget = document.getElementById('heroWidget');
+    let widgetRenderer, widgetScene, widgetCam, widgetMesh;
+    if (wCanvas && !mobile) {
+      widgetRenderer = new THREE.WebGLRenderer({ canvas: wCanvas, antialias: true, alpha: true });
+      widgetRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      widgetRenderer.setSize(280, 280, false);
+
+      widgetScene = new THREE.Scene();
+      widgetCam = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+      widgetCam.position.z = 3.5;
+
+      const iGeom = new THREE.IcosahedronGeometry(1.1, 1);
+      const wireMat = new THREE.ShaderMaterial({
+        transparent: true,
+        wireframe: true,
+        uniforms: {
+          uTime: { value: 0 },
+          uAccent: { value: new THREE.Color(0xff5230) },
+          uText: { value: new THREE.Color(0xa8a8a8) },
+        },
+        vertexShader: `
+          varying vec3 vPos;
+          uniform float uTime;
+          void main() {
+            vPos = position;
+            vec3 p = position;
+            p += normal * sin(uTime * 1.2 + position.y * 4.0) * 0.04;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+          }
+        `,
+        fragmentShader: `
+          varying vec3 vPos;
+          uniform vec3 uAccent;
+          uniform vec3 uText;
+          uniform float uTime;
+          void main() {
+            float t = sin(vPos.x * 4.0 + uTime * 0.8) * 0.5 + 0.5;
+            vec3 col = mix(uText, uAccent, t * 0.6);
+            gl_FragColor = vec4(col, 0.85);
+          }
+        `,
+      });
+      widgetMesh = new THREE.Mesh(iGeom, wireMat);
+      widgetScene.add(widgetMesh);
+
+      /* drag-rotate */
+      const drag = { active: false, lx: 0, ly: 0, rx: 0.4, ry: 0.4, vx: 0.005, vy: 0.003 };
+      widget.addEventListener('mousedown', (e) => {
+        drag.active = true; drag.lx = e.clientX; drag.ly = e.clientY;
+        widget.classList.add('grabbing'); e.preventDefault();
+      });
+      window.addEventListener('mouseup', () => { drag.active = false; widget.classList.remove('grabbing'); });
+      window.addEventListener('mousemove', (e) => {
+        if (!drag.active) return;
+        const dx = (e.clientX - drag.lx) * 0.01;
+        const dy = (e.clientY - drag.ly) * 0.01;
+        drag.ry += dx;
+        drag.rx += dy;
+        drag.vx = dy * 0.6 + 0.005;
+        drag.vy = dx * 0.6 + 0.003;
+        drag.lx = e.clientX; drag.ly = e.clientY;
+      });
+      widget._drag = drag;
+    }
+
+    /* ── 5. HUD readouts ────────────────────────────────────────────── */
+    const elClock = document.getElementById('hudClock');
+    const elPtrX = document.getElementById('hudPtrX');
+    const elPtrY = document.getElementById('hudPtrY');
+    const elScroll = document.getElementById('hudScroll');
+    const elView = document.getElementById('hudView');
+    const elFps = document.getElementById('hudFps');
+
+    const tickClock = () => {
+      const d = new Date();
+      const t = d.toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour12: false });
+      if (elClock) elClock.textContent = t;
+    };
+    tickClock(); setInterval(tickClock, 1000);
+
+    let rawPtrX = 0, rawPtrY = 0;
+    window.addEventListener('mousemove', (e) => { rawPtrX = e.clientX; rawPtrY = e.clientY; });
+    const fmt4 = n => {
+      const s = Math.abs(Math.round(n)).toString().padStart(4, '0');
+      return (n < 0 ? '-' : '+') + s;
+    };
+
+    const updateView = () => {
+      if (elView) elView.textContent = window.innerWidth + ' × ' + window.innerHeight;
+    };
+    updateView();
+    window.addEventListener('resize', updateView);
+
+    let lastScrollY = 0;
+    window.addEventListener('scroll', () => {
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - window.innerHeight;
+      const pct = max > 0 ? (window.scrollY / max) * 100 : 0;
+      if (elScroll) elScroll.textContent = Math.min(100, Math.round(pct)).toString().padStart(3, '0');
+      const dy = window.scrollY - lastScrollY;
+      state.scrollVelTarget = Math.min(1, Math.abs(dy) / 30);
+      lastScrollY = window.scrollY;
+      state.scroll = window.scrollY / window.innerHeight;
+    });
+
+    /* FPS counter */
+    let fpsT = performance.now(), frames = 0, fps = 60;
+    const updateFps = (now) => {
+      frames++;
+      if (now - fpsT >= 500) {
+        fps = Math.round((frames * 1000) / (now - fpsT));
+        if (elFps) elFps.textContent = fps;
+        frames = 0; fpsT = now;
+      }
+    };
+
+    /* ── 6. Main render loop ────────────────────────────────────────── */
+    const clock = new THREE.Clock();
+    function loop() {
+      const now = performance.now();
+      const t = clock.getElapsedTime();
+
+      /* lerp mouse */
+      state.mx += (state.tx - state.mx) * 0.12;
+      state.my += (state.ty - state.my) * 0.12;
+      state.mAct += (state.tAct - state.mAct) * 0.06;
+      state.scrollVel += (state.scrollVelTarget - state.scrollVel) * 0.08;
+      state.scrollVelTarget *= 0.9;
+
+      if (planeMat) {
+        planeMat.uniforms.uTime.value = t;
+        planeMat.uniforms.uMouse.value.set(state.mx, state.my);
+        planeMat.uniforms.uMouseAct.value = state.mAct;
+        planeMat.uniforms.uScroll.value = state.scroll;
+        planeMat.uniforms.uScrollVel.value = state.scrollVel;
+      }
+
+      if (renderer && scene && camera) renderer.render(scene, camera);
+
+      /* widget */
+      if (widgetMesh) {
+        const d = widget._drag;
+        if (!d.active) {
+          d.ry += d.vy;
+          d.rx += d.vx * 0.4;
+          d.vy *= 0.985;
+          d.vx *= 0.985;
+          d.vy += (0.005 - d.vy) * 0.01;
+          d.vx += (0.003 - d.vx) * 0.01;
+        }
+        widgetMesh.rotation.x = d.rx;
+        widgetMesh.rotation.y = d.ry;
+        widgetMesh.material.uniforms.uTime.value = t;
+        widgetRenderer.render(widgetScene, widgetCam);
+      }
+
+      /* HUD ptr */
+      if (elPtrX) elPtrX.textContent = fmt4(rawPtrX);
+      if (elPtrY) elPtrY.textContent = fmt4(rawPtrY);
+
+      updateFps(now);
+      requestAnimationFrame(loop);
+    }
+    loop();
+  })();
+</script>
+
+<script>
+  (function() {
+    const el = document.getElementById('footerClock');
+    if (!el) return;
+    const t = () => { el.textContent = new Date().toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', hour12: false }); };
+    t(); setInterval(t, 30000);
+  })();
+</script>
+
+</body>
+</html>
